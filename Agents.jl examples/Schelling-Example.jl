@@ -84,13 +84,29 @@ model = initialize()
 step!(model, agent_step!, dummystep, t)
 
 #Visualize model and animate time evolution, Can be used to check if model behaves as expected
-using InteractiveDynamics, GLMakie
-##
-groupcolor(agent) = agent.group == 1 ? :blue : :orange 
-groupmarker(agent) = agent.group == 1 ? :circle : :rect
+using InteractiveDynamics, GLMakie, Random
+model = initialize()
+params = Dict(:min_to_be_happy => 0:1:8,)
 
-fig, _ = abmplot(model; ac = groupcolor, am = groupmarker)
+groupcolor(agent) = agent.group == 1 ? :blue : :orange 
+
+
+plotkwargs = (;
+ac = groupcolor, 
+as = 20, 
+am = '⌂',
+scatterkwargs = (strokewidth = 1.0,)
+)
+
+fig, ax, abmobs = abmplot(model; plotkwargs...)
 display(fig)
+
+##Create Interactive plot
+fig, ax, abmobs = abmplot(model;
+agent_step!, model_step! = dummystep, params, plotkwargs...)
+display(fig)
+
+
 
 #Collect Data. You can collect data of anything you want using a function. Can be agent position or id too. 
 x(agent) = agent.pos[1]
