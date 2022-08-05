@@ -93,7 +93,7 @@ groupcolor(agent) = agent.group == 1 ? :blue : :orange
 
 plotkwargs = (;
 ac = groupcolor, 
-as = 20, 
+as = 50, 
 am = '⌂',
 scatterkwargs = (strokewidth = 1.0,)
 )
@@ -107,7 +107,7 @@ agent_step!, model_step! = dummystep, params, plotkwargs...)
 display(fig)
 
 
-
+#=
 #Collect Data. You can collect data of anything you want using a function. Can be agent position or id too. 
 x(agent) = agent.pos[1]
 
@@ -123,3 +123,4 @@ adata = [
 ]
 model = initialize()
 adf, _ = run!(model, agent_step!, dummystep, 3; adata)
+=#
