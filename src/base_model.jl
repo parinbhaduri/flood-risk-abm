@@ -85,6 +85,8 @@ function relocation!(utility_matrix::Matrix, model::ABM)
     for i in sorted_agent
         #If agent's current utility is larger than max available, skip iteration
         model.init_utility[i.pos...] > new_max && continue
+        #Add agent's previous utility to utility matrix
+        utility_matrix[i.pos...] = model.init_utility[i.pos...]
         #move agent to better utility location
         move_agent!(i, tuple(best_ind[1], best_ind[2]), model)
 
@@ -113,4 +115,4 @@ function model_step!(model::ABM)
 end
 
 
-
+## Visualization 
