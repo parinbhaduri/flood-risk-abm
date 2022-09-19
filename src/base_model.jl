@@ -1,18 +1,31 @@
 #Import Packages
 using Agents
 using Random
+using Statistics
+using LinearAlgebra
+using Distributions
 
+#Create Elevation and Flood Matrix
+Elevation = zeros(30,30)
+basin = range(0, 10, length = 15)
+Elevation = Elevation .+ [reverse(basin); basin]
+
+Flood = zeros(30,30)
+f_depth = range(0,5, length = 15)
+Flood = Flood .+ [f_depth; reverse(f_depth)]
 #Define Agent Type
 
 mutable struct HouseHold <: AbstractAgent
     id::Int
     pos::Dims{2}
+    flood::Float64
+    action::Bool
     age::Int
     income::Int
 end
 
 #Initialize model 
-function flood_ABM(;
+function flood_ABM(Elevation;
     N = 600,
     M = 30, 
     griddims = (M, M),
@@ -32,7 +45,7 @@ function flood_ABM(;
     #Future Case: randomly generate values in separate file and save to csv file.
     #Then load properties from csv file
 
-    properties = Dict(:Elevation => zeros(griddims), :SqFeet => SqFeet,
+    properties = Dict(:Elevation => Elevation, :SqFeet => SqFeet,
      :Age => Age, :Stories => Stories, :Baths => Baths, :risk_averse => risk_averse)
      #Calculate initial utility
      init_utility = c1 * SqFeet + c2 * Age + c3 * Stories + c4 * Baths
@@ -46,13 +59,26 @@ function flood_ABM(;
 
     #Add Agents
     for n in 1:N
-        agent = HouseHold(n, (1,1), rand(1:5), rand(30000:200000))
+        agent = HouseHold(n, (1,1), 0.0, false, rand(1:5), rand(30000:200000))
         add_agent_single!(agent, model)
     end
 
    
     return model
 end
+
+## Calculate Agent Probability to act
+function agent_prob!(agent, model::ABM)
+   #Calculate logistic Probability
+   flood_prob = 1/(1+ exp(-10(agent.flood - 0.5)))
+   #Input probability into Binomial Distribution 
+    outcome = rand(Binomial(1,flood_prob), 1)
+   #Save Binomial result as Agent property
+    if outcome == 1
+        agent.action = true
+    end
+end
+
 
 ## Sort agents based on income
 function pop_change!(model::ABM)
@@ -116,3 +142,27 @@ end
 
 
 ## Visualization 
+using InteractiveDynamics, GLMakie, Random
+model = flood_ABM(Elevation)
+params = Dict(:risk_averse => 0:0.1:1,)
+
+groupcolor(agent) = :blue
+
+heatarray = :init_utility
+heatkwargs = (colorrange = (1e8, 2e9), colormap = :viridis)
+plotkwargs = (;
+ac = groupcolor, 
+as = 50, 
+am = '⌂',
+scatterkwargs = (strokewidth = 1.0,),
+heatarray,
+heatkwargs
+)
+
+fig, ax, abmobs = abmplot(model; plotkwargs...)
+display(fig)
+
+##Create Interactive plot
+fig, ax, abmobs = abmplot(model;
+agent_step!, model_step!, params, plotkwargs...)
+display(fig)
