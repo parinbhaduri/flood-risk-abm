@@ -13,64 +13,88 @@ Elevation = Elevation .+ [reverse(basin); basin]
 Flood = zeros(30,30)
 f_depth = range(0,5, length = 15)
 Flood = Flood .+ [f_depth; reverse(f_depth)]
-#Define Agent Type
 
-mutable struct HouseHold <: AbstractAgent
-    id::Int
+#Define Agent Types
+
+mutable struct Family <: AbstractAgent
+    id::Int64
     pos::Dims{2}
-    flood::Float64
     action::Bool
     age::Int
     income::Int
 end
 
+mutable struct House <: AbstractAgent
+    id::Int64
+    pos::Dims{2}
+    flood::Float64
+    SqFeet::Float64
+    Age::Float64
+    Stories::Float64
+    Baths::Float64
+    Utility::Float64
+end
+
+
 #Initialize model 
-function flood_ABM(Elevation;
+function flood_ABM(Elevation, Flood;
     N = 600,
     M = 30, 
     griddims = (M, M),
-    c1 = 294707, 
-    c2 = 130553, 
-    c3 = 128990, 
-    c4 = 154887, 
+    c1 = 294707, #SqFeet coef
+    c2 = 130553, #Age coef
+    c3 = 128990, #Stories coef
+    c4 = 154887, #Baths coef
     risk_averse = 0.5, #Decimal between 0 and 1
 )
     space = GridSpace(griddims)
-
-    #Calculate Matrices of Housing Properties
-    SqFeet = rand(500:4000, griddims)
-    Age = rand(0:5, griddims)
-    Stories = rand(1:3,griddims)
-    Baths = rand(1:4, griddims)
-    #Future Case: randomly generate values in separate file and save to csv file.
-    #Then load properties from csv file
-
-    properties = Dict(:Elevation => Elevation, :SqFeet => SqFeet,
-     :Age => Age, :Stories => Stories, :Baths => Baths, :risk_averse => risk_averse)
-     #Calculate initial utility
-     init_utility = c1 * SqFeet + c2 * Age + c3 * Stories + c4 * Baths
-     properties[:init_utility] = init_utility
+    
+    properties = Dict(:Elevation => Elevation, :Flood_depth => Flood, :risk_averse => risk_averse, :tick => 0)
+    
 
     model = ABM(
-        HouseHold,
-        space;
+        Union{Family,House},
+        space,
+        scheduler = Schedulers.ByType(true, true, Union{Family,House});
         properties = properties,
+        warn = false,
     )
-
     #Add Agents
     for n in 1:N
-        agent = HouseHold(n, (1,1), 0.0, false, rand(1:5), rand(30000:200000))
+        agent = Family(n, (1,1), false, rand(1:5), rand(30000:200000))
         add_agent_single!(agent, model)
     end
+
+    #Fill model with Houses
+        #Future Case: randomly generate House property values in separate file as distributions
+        #Then sample normalized values from distributions
+    for p in positions(model)
+        SqFeet = float(rand(500:4000))
+        Age = float(rand(0:5))
+        Stories = float(rand(1:5))
+        Baths = float(rand(30000:200000))
+        #Calculate Initial Utility
+        init_utility = c1 * SqFeet + c2 * Age + c3 * Stories + c4 * Baths
+        #Add Agents to model
+        house = House(nextid(model), p, 0.0, SqFeet, Age, Stories, Baths, init_utility)
+        add_agent!(house, model)
+    end
+
+   
+    
 
    
     return model
 end
 
+
+## Update Flooded Houses
+
 ## Calculate Agent Probability to act
-function agent_prob!(agent, model::ABM)
+function agent_prob!(agent::Family, House, model::ABM)
    #Calculate logistic Probability
-   flood_prob = 1/(1+ exp(-10(agent.flood - 0.5)))
+   pos = agent.pos
+   flood_prob = 1/(1+ exp(-10(House(pos).flood - 0.5)))
    #Input probability into Binomial Distribution 
     outcome = rand(Binomial(1,flood_prob), 1)
    #Save Binomial result as Agent property
@@ -86,7 +110,8 @@ function pop_change!(model::ABM)
 end
 
 ##Update Utility from Flooding
-function update_utility(model::ABM)
+function update_utility(pos::Dims{2}, model::ABM)
+    #Function updates given house and will return house id if house is empty 
     #Calculate new utility after flood occurs
 
     #create utility matrix of available cells for agent relocation
@@ -98,7 +123,15 @@ function update_utility(model::ABM)
     return avail_pos
 end 
 
-    
+##New Relocation function
+function relocation!(model::ABM)
+    #Filter Family agents by action = true
+    sorted_agent = sort([a for a in allagents(model) if a isa Family && a.action = true], by = x -> x.income, rev = true)
+    #Find available positions
+    avail_house = [n for n in allagents(model) if n isa House && length(ids_in_position(n.pos, model)) < 2]
+    #Find max utility and associated position
+
+
 ## Agent Relocation 
 function relocation!(utility_matrix::Matrix, model::ABM)
     #sort agents by income 
@@ -127,7 +160,7 @@ end
     ### agent and model step functions
 
     #Agent_step function used to remove agents over time
-function agent_step!(agent::HouseHold, model::ABM)
+function agent_step!(agent::Family, model::ABM)
         #track agent age over time
         agent.age += 1
         #Function will then remove agent using kill_agent! when age threshold is reached
