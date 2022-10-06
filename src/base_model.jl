@@ -49,7 +49,7 @@ function flood_ABM(Elevation, Flood;
 )
     space = GridSpace(griddims)
     
-    properties = Dict(:Elevation => Elevation, :Flood_depth => Flood, :risk_averse => risk_averse, :tick => 0)
+    properties = Dict(:Elevation => Elevation, :Flood_depth => Flood, :Flood_diff => Elevation - Flood, :risk_averse => risk_averse, :tick => 0)
     
 
     model = ABM(
@@ -77,7 +77,7 @@ function flood_ABM(Elevation, Flood;
         init_utility = c1 * SqFeet + c2 * Age + c3 * Stories + c4 * Baths
         #Add Agents to model
         house = House(nextid(model), p, 0.0, SqFeet, Age, Stories, Baths, init_utility)
-        add_agent!(house, model)
+        add_agent_pos!(house, model)
     end
 
    
@@ -89,18 +89,25 @@ end
 
 
 ## Update Flooded Houses
-
+function flooded!(agent::House, model::ABM)
+    #See if house was flooded
+    model.Flood_diff[agent.pos[1], [2]] > 0 && return
+    agent.flood += 1 
+    #Update House Utility
+    c5 = 290863  #Flood coef found by added previous coef and subtract from 1 mill
+    agent.utility += c5 * agent.flood
+end
+    
 ## Calculate Agent Probability to act
 function agent_prob!(agent::Family, House, model::ABM)
-   #Calculate logistic Probability
-   pos = agent.pos
-   flood_prob = 1/(1+ exp(-10(House(pos).flood - 0.5)))
-   #Input probability into Binomial Distribution 
+    #Calculate logistic Probability
+    pos_ids = ids_in_position(agent, model) #First id is Family, second is House
+    flood_prob = 1/(1+ exp(-10(model[pos_ids[2]].flood - 0.5)))
+    #Input probability into Binomial Distribution 
     outcome = rand(Binomial(1,flood_prob), 1)
-   #Save Binomial result as Agent property
-    if outcome == 1
-        agent.action = true
-    end
+    #Save Binomial result as Agent property
+    action = outcome == 1 ? true : false
+    agent.action = action
 end
 
 
@@ -123,6 +130,7 @@ function update_utility(pos::Dims{2}, model::ABM)
     return avail_pos
 end 
 
+##Create function to find max value and max index
 ##New Relocation function
 function relocation!(model::ABM)
     #Filter Family agents by action = true
@@ -130,8 +138,23 @@ function relocation!(model::ABM)
     #Find available positions
     avail_house = [n for n in allagents(model) if n isa House && length(ids_in_position(n.pos, model)) < 2]
     #Find max utility and associated position
+    new_max = maximum(x -> x.Utility, avail_house)
+    max_house = avail_house[findfirst(x -> x.Utility == new_max, avail_house)]
+    for i in sorted_agent
+        pos_ids = ids_in_position(i, model)
+        #If agent's current utility is larger than max available, skip iteration
+        model[pos_ids[2]].Utility > new_max && continue
+        #Add agent's previous house to avail_house vector
+        
+        #move agent to better utility location
+        move_agent!(i, tuple(best_ind[1], best_ind[2]), model)
 
-
+        #Remove position and update max terms
+        utility_matrix[best_ind] = 0
+        new_max = maximum(utility_matrix)
+        best_ind = findfirst(x -> x == new_max, utility_matrix)
+    end
+end
 ## Agent Relocation 
 function relocation!(utility_matrix::Matrix, model::ABM)
     #sort agents by income 
