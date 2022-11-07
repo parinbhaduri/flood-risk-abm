@@ -1,6 +1,6 @@
-module FloodAgents
+
 using Agents
-export Family, House
+
 
 mutable struct Family <: AbstractAgent
     id::Int64
@@ -8,6 +8,8 @@ mutable struct Family <: AbstractAgent
     action::Bool
     age::Int
     income::Int
+    utility::Float64
+    
 end
 
 mutable struct House <: AbstractAgent
@@ -18,11 +20,8 @@ mutable struct House <: AbstractAgent
     Age::Float64
     Stories::Float64
     Baths::Float64
-    Utility::Float64
 end
     
-    
-end
 
 
 

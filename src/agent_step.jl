@@ -1,5 +1,6 @@
 
-module AgentFunctions
+using Agents
+
 #For Family
 
 ## Calculate Agent Probability to act
@@ -16,9 +17,29 @@ function agent_prob!(agent::Family, model::ABM)
     agent.action = action
 end
 
-function pop_change!(model::ABM)
-    #Ultimately will add population growth methods
+## Create Function for Family agent to calculate utility
+function exp_utility(house::House)
+    c1 = 294707 #SqFeet coef
+    c2 = 130553 #Age coef
+    c3 = 128990 #Stories coef
+    c4 = 154887 #Baths coef
+
+    #Calculate initial utility of house
+    house_price = c1 * house.SqFeet + c2 * house.Age + c3 * house.Stories + c4 * house.Baths
+    #Calculate losses from flood events
+
+    extent = length(house.flood) #gives length of flood record for house
+    time_back =  extent > 10 ? range(extent, extent - 10, step = -1) : range(extent, 1, step = -1)
+    house_loss = 1 - (0.25 * sum(house.flood[time_back]))
+    will_to_pay = house_price * house_loss
+    return will_to_pay
+
 end
+
+
+#function pop_change!(model::ABM)
+#    #Ultimately will add population growth methods
+#end
 
 ###For Houses
 
@@ -29,4 +50,4 @@ function flooded!(agent::House, model::ABM)
     push!(agent.flood, surge) 
 end
 
-end
+
