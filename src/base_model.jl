@@ -27,7 +27,7 @@ function flood_ABM(Elevation;
     M = 30, 
     griddims = (M, M),
     
-    risk_averse = 0.5, #Decimal between 0 and 1
+    risk_averse = 0.3, #Decimal between 0 and 1
 )
     space = GridSpace(griddims)
     
@@ -73,9 +73,9 @@ function flood_ABM(Elevation;
         end
         #create vector to hold flood events experienced by house
         floods = [0]
-        
+        flood_mem = 0.0
         #Add Agents to model
-        house = House(nextid(model), p, floods, SqFeet, Age, Stories, Baths)
+        house = House(nextid(model), p, floods, flood_mem, SqFeet, Age, Stories, Baths)
         add_agent_pos!(house, model)
     end
 

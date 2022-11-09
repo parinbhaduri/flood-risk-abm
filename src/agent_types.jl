@@ -16,6 +16,7 @@ mutable struct House <: AbstractAgent
     id::Int64
     pos::Dims{2}
     flood::Vector{Float64}
+    flood_mem::Float64
     SqFeet::Float64
     Age::Float64
     Stories::Float64
