@@ -4,6 +4,7 @@
 function flood_GEV!(model::ABM)
     f_d = GEV_event()
     model.Flood_depth = f_d
+    push!(model.flood_record, f_d)
 end
 #Relocation of Family Agents
 

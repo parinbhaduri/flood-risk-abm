@@ -18,14 +18,14 @@ end
 #Initialize model
 unit_model = flood_ABM(Elevation)
 #Step throuqh model
-step!(unit_model, agent_step!, model_step_unit!,12)
+step!(unit_model, agent_step!, model_step_unit!,15)
 
 #visualize model
 using InteractiveDynamics, GLMakie, Random
 
 Floodcolor(agent::Family) = agent.action == true ? :green : :black 
-const housecolor = cgrad(:dense, 5, categorical = true)
-Floodcolor(agent::House) =  housecolor[Int64(sum(agent.flood)+1)]
+const housecolor = cgrad(:dense, 11, categorical = true)
+Floodcolor(agent::House) =  housecolor[Int64(sum(agent.flood_mem)+1)]
 
 Floodshape(agent::Family) = '⌂'
 Floodsize(agent::Family) = 50
@@ -42,12 +42,11 @@ scheduler = plotsched,
 scatterkwargs = (strokewidth = 1.0,)
 )
 
-unit_fig, ax, abmobs = abmplot(unit_model; plotkwargs...)
+unit_fig, ax, abmobs = abmplot(unit_model, enable_inspection = true ; plotkwargs...)
 
 display(unit_fig)
+#savefig(unit_fig,"test/Test_visuals/unit_model_init.png")
 
-##Create Interactive plot
-
-unit_fig, ax, abmobs = abmplot(unit_model;
-agent_step!, model_step_unit!, showstep = true, plotkwargs...)
-display(unit_fig)
+##Create ABM video
+abmvideo("unit_test_abm.mp4", unit_model,
+agent_step!, model_step!; title = "Flood ABM", showstep = true, frames = 150, plotkwargs...)
