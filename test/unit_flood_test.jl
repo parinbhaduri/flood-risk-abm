@@ -17,30 +17,9 @@ end
 
 #Initialize model
 unit_model = flood_ABM(Elevation)
-#Step throuqh model
-step!(unit_model, agent_step!, model_step_unit!,15)
+step!(unit_model, agent_step!, model_step_unit!, 15)
 
-#visualize model
-using InteractiveDynamics, GLMakie, Random
-
-Floodcolor(agent::Family) = agent.action == true ? :green : :black 
-const housecolor = cgrad(:dense, 11, categorical = true)
-Floodcolor(agent::House) =  housecolor[Int64(sum(agent.flood_mem)+1)]
-
-Floodshape(agent::Family) = '⌂'
-Floodsize(agent::Family) = 50
-Floodshape(agent::House) = '■'
-Floodsize(agent::House) = 75,75
-
-plotsched = Schedulers.ByType(true, true, Union{House,Family})
-
-plotkwargs = (;
-ac = Floodcolor, 
-as =Floodsize, 
-am = Floodshape,
-scheduler = plotsched, 
-scatterkwargs = (strokewidth = 1.0,)
-)
+include("../src/visual_attrs.jl")
 
 unit_fig, ax, abmobs = abmplot(unit_model, enable_inspection = true ; plotkwargs...)
 

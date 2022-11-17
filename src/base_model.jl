@@ -21,8 +21,8 @@ include("agent_step.jl")
 
 
 #Initialize model 
-function flood_ABM(Elevation;
-    flood_depth = 0,
+function flood_ABM(Elevation, levee = nothing;
+    flood_depth = 0.0,
     N = 600,
     M = 30, 
     griddims = (M, M),
@@ -31,7 +31,7 @@ function flood_ABM(Elevation;
 )
     space = GridSpace(griddims)
     
-    properties = Dict(:Elevation => Elevation, :Flood_depth => flood_depth, :flood_record => [], :risk_averse => risk_averse,
+    properties = Dict(:Elevation => Elevation, :levee => levee, :Flood_depth => flood_depth, :risk_averse => risk_averse,
      :memory => 10, :tick => 0)
     
 

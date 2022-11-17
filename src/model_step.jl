@@ -3,8 +3,12 @@
 #Calculate flood depth and update model property
 function flood_GEV!(model::ABM)
     f_d = GEV_event()
-    model.Flood_depth = f_d
-    push!(model.flood_record, f_d)
+    if model.levee != nothing
+        levee_depth = GEV_return(model.levee)
+        model.Flood_depth = f_d - levee_depth
+    else
+        model.Flood_depth = f_d
+    end
 end
 #Relocation of Family Agents
 
