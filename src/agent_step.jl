@@ -20,10 +20,13 @@ function agent_prob!(agent::Family, model::ABM)
         flood_prob = 1/(1+ exp(-10((sum(model[calc_house].flood[time_back])/mem) - model.risk_averse)))
     end
     #Input probability into Binomial Distribution 
-    outcome = rand(model.rng, Binomial(1,flood_prob), 1)
+    if flood_prob < 1
+    #outcome = rand(model.rng, 1)
+        outcome = rand(model.rng, Binomial(1,flood_prob))
     #Save Binomial result as Agent property
-    action = outcome[1] == 1 ? true : false
-    agent.action = action
+        action = outcome == 1 ? true : false
+        agent.action = action
+    end
 end
 
 ## Create Function for Family agent to calculate utility
@@ -55,11 +58,11 @@ end
 
 ## Update Flooded Houses
 function flooded!(agent::House, model::ABM)
+    year = model.tick
     #See if house was flooded
-    surge = model.Flood_depth > model.Elevation[agent.pos[1],agent.pos[2]] ? 1 : 0
+    surge = model.Flood_depth[year] > model.Elevation[agent.pos[1],agent.pos[2]] ? 1 : 0
     push!(agent.flood, surge) 
     #Record number of floods in the last mem years
-    year = model.tick
     mem = model.memory
     time_back = year > mem ? range(year, year - (mem-1), step = -1) : range(year, 1, step = -1)
     agent.flood_mem = sum(agent.flood[time_back])
