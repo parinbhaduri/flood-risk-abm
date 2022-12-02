@@ -2,10 +2,11 @@
 
 #Calculate flood depth and update model property
 function flood_GEV!(model::ABM)
-    f_d = GEV_event()
+    f_d = GEV_event(model)
     if model.levee != nothing
         levee_depth = GEV_return(model.levee)
-        model.Flood_depth = f_d - levee_depth
+        flood_levee = f_d - levee_depth
+        model.Flood_depth = flood_levee < 0 ? 0 : flood_levee
     else
         model.Flood_depth = f_d
     end
@@ -43,4 +44,19 @@ function relocation!(model::ABM)
         #Add agent's previous house to avail_house vector
         push!(avail_house, model[sort_house])
     end
+end
+
+
+#Collect Flood events from House Agents
+function flood_color(model::ABM)
+    #create space equivalent to model
+    space_size = size(model.space)
+    flood_event_space = zeros(space_size[1],space_size[2])
+    #Collect all Houses
+    model_houses = [n for n in allagents(model) if n isa House]
+    #Assign flood mem to matrix space
+    for i in model_houses
+        flood_event_space[i.pos[1], i.pos[2]] = Int64(i.flood_mem+1)
+    end
+    return flood_event_space
 end

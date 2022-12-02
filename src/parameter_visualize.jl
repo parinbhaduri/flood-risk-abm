@@ -1,4 +1,4 @@
-using InteractiveDynamics, GLMakie, Plots, Distributions
+using InteractiveDynamics, GLMakie, Plots, Distributions, LinearAlgebra
 
 #Graph Agent action probability
 x = range(0,1, length = 100)
@@ -13,7 +13,17 @@ Plots.xlabel!("Flood Events")
 Plots.ylabel!("Action Probability")
 savefig(log_fig, "src/Parameter_visual/log_func.png")
 
+#Create heatmap for Elevation
+include("../data/Elevation.jl")
+figure = (; resolution=(600, 400), dpi = 300, font="CMU Serif")
 
+figure_elev = Plots.heatmap(1:30,1:30, transpose(Elevation),
+    seriescolor=cgrad(:gist_earth),
+    title="Elevation", Figure = figure)
+#Colorbar(fig[1, 2], pltobj, label = "Elevation")
+#colsize!(fig.layout, 1, Aspect(1, 1.0))
+#fig
+savefig(figure_elev, "src/Parameter_visual/figure_elev.png")
 
 
 

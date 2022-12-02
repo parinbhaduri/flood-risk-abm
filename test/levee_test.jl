@@ -1,8 +1,13 @@
 #Compare regular model run with levee inclusion
 include("../src/base_model.jl")
-risk_abm_100 = flood_ABM(Elev_100, 1/100)
+#set seed
+Random.seed!(246)
+risk_abm_100_high = flood_ABM(Elev_100, 0.3, 1/100)
+#low risk aversion
+risk_abm_100_low = flood_ABM(Elev_100, 0.7, 1/100)
+
 #Define params to manipulate
-params = Dict(:risk_averse => 0:0.1:1,)
+#params = Dict(:risk_averse => 0:0.1:1,)
 
 #Define plot attributes
 include("../src/visual_attrs.jl")
@@ -27,19 +32,36 @@ mdata = [:Flood_depth]
 
 #run model to gather data
 using Plots
-agents_df, model_df = run!(risk_abm_100, agent_step!, model_step!, 50; adata, mdata)
-
+##Try ensemble run
+adf_100, mdf_100 = ensemblerun!([risk_abm_100_high risk_abm_100_low], agent_step!, model_step!, 50; adata, mdata)
 #plot agents deciding to move
-agent_plot_100 = Plots.plot(agents_df.step, agents_df.count_action_fam, lw = 3)
+agent_plot_100 = Plots.plot(adf_100.step, adf_100.count_action_fam, group = adf_100.ensemble, label = ["high" "low"], 
+linecolor = [housecolor[6] housecolor[2]], lw = 3)
+Plots.ylims!(0,80)
 Plots.ylabel!("Moving Agents")
-#plot agents in floodplain
-fp_plot_100 = Plots.plot(agents_df.step, agents_df.count_floodplain_fam, lw = 3)
+
+#plot agents in the floodplain
+fp_plot_100 = Plots.plot(adf_100.step, adf_100.count_floodplain_fam, group = adf_100.ensemble, label = ["high" "low"], 
+linecolor = [housecolor[7] housecolor[3]], lw = 3)
 Plots.ylabel!("Floodplain Pop.")
+Plots.ylims!(160,250)
+Plots.xlabel!("Year")
 #plot flood depths
-model_plot_100 = Plots.plot(model_df.step, model_df.Flood_depth, lw = 3)
+model_plot_100 = Plots.plot(mdf_100.step, mdf_100.Flood_depth, group = mdf_100.ensemble,
+ linecolor = [housecolor[10] housecolor[5]], lw = 3)
+Plots.ylims!(0,30)
 Plots.ylabel!("Flood Depth")
 
-Plots.plot(agent_plot_100, fp_plot_100, model_plot_100, layout = (3,1))
+#create subplot
+levee_results = Plots.plot(model_plot_100, agent_plot_100, fp_plot_100, layout = (3,1), legend = :outertopright, dpi = 300,size = (500,600))
 
-risk_fig_100, ax, abmobs = abmplot(risk_abm_100, enable_inspection = true; plotkwargs...)
+savefig(levee_results, "test/Test_visuals/levee_results.png")
+
+#Spatial Plots
+Random.seed!(246)
+risk_abm_100_high = flood_ABM(Elev_100, 0.3, 1/100)
+step!(risk_abm_100_high, agent_step!, model_step!,25)
+risk_fig_100, ax, abmobs = abmplot(risk_abm_100_high,; plotkwargs...)
+
 display(risk_fig_100)
+Makie.save("test/Test_visuals/risk_fig_100.png", risk_fig_100)

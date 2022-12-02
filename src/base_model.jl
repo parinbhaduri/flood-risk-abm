@@ -5,9 +5,6 @@ using Statistics
 using LinearAlgebra
 using Distributions
 
-#Set Random seed
-Random.seed!(246)
-
 #Import Elevation and Flood Matrix
 include("../data/Elevation.jl")
 include("../data/GEV.jl")
@@ -21,13 +18,12 @@ include("agent_step.jl")
 
 
 #Initialize model 
-function flood_ABM(Elevation, levee = nothing;
+function flood_ABM(Elevation, risk_averse = 0.3,levee = nothing;  #risk_averse: Decimal between 0 and 1
     flood_depth = 0.0,
     N = 600,
     M = 30, 
     griddims = (M, M),
-    
-    risk_averse = 0.3, #Decimal between 0 and 1
+    seed = 246,
 )
     space = GridSpace(griddims)
     
@@ -40,11 +36,12 @@ function flood_ABM(Elevation, levee = nothing;
         space,
         scheduler = Schedulers.ByType(true, true, Union{Family,House});
         properties = properties,
+        rng = MersenneTwister(seed),
         warn = false,
     )
     #Add Agents
     for n in 1:N
-        agent = Family(n, (1,1), false, rand(1:5), rand(30000:200000), 0.0)
+        agent = Family(n, (1,1), false, rand(model.rng, 1:5), rand(model.rng, 30000:200000), 0.0)
         add_agent_single!(agent, model)
     end
 

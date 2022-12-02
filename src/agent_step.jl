@@ -8,7 +8,7 @@ function agent_prob!(agent::Family, model::ABM)
     #Calculate logistic Probability
     year = model.tick
     mem = model.memory
-    time_back = year > mem ? range(year, year - mem, step = -1) : range(year, 1, step = -1)
+    time_back = year > mem ? range(year, year - (mem-1), step = -1) : range(year, 1, step = -1)
     pos_ids = ids_in_position(agent, model) #First id is Family, second is House
     calc_house = [id for id in pos_ids if model[id] isa House][1]
     #Calculate flood probability based on risk averse value
@@ -20,7 +20,7 @@ function agent_prob!(agent::Family, model::ABM)
         flood_prob = 1/(1+ exp(-10((sum(model[calc_house].flood[time_back])/mem) - model.risk_averse)))
     end
     #Input probability into Binomial Distribution 
-    outcome = rand(Binomial(1,flood_prob), 1)
+    outcome = rand(model.rng, Binomial(1,flood_prob), 1)
     #Save Binomial result as Agent property
     action = outcome[1] == 1 ? true : false
     agent.action = action
@@ -39,7 +39,7 @@ function exp_utility(house::House)
     #Calculate losses from flood events
 
     extent = length(house.flood) #gives length of flood record for house
-    time_back =  extent > mem ? range(extent, extent - mem, step = -1) : range(extent, 1, step = -1)
+    time_back =  extent > mem ? range(extent, extent - (mem-1), step = -1) : range(extent, 1, step = -1)
     house_loss = 1 - (0.25 * sum(house.flood[time_back]))
     will_to_pay = house_price * house_loss
     return will_to_pay
@@ -61,7 +61,7 @@ function flooded!(agent::House, model::ABM)
     #Record number of floods in the last mem years
     year = model.tick
     mem = model.memory
-    time_back = year > mem ? range(year, year - mem, step = -1) : range(year, 1, step = -1)
+    time_back = year > mem ? range(year, year - (mem-1), step = -1) : range(year, 1, step = -1)
     agent.flood_mem = sum(agent.flood[time_back])
 end
 
