@@ -68,4 +68,4 @@ function flooded!(agent::House, model::ABM)
     agent.flood_mem = sum(agent.flood[time_back])
 end
 
-
+mem_agents = [n for n in allagents(risk_abm_high) if n isa House]
