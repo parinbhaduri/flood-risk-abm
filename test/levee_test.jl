@@ -72,3 +72,5 @@ risk_fig_100, ax, abmobs = abmplot(risk_abm_100_high,; plotkwargs...)
 
 display(risk_fig_100)
 Makie.save("test/Test_visuals/risk_fig_100.png", risk_fig_100)
+
+##Create ABM video

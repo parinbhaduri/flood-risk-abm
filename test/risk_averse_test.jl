@@ -1,7 +1,7 @@
 #initialize model
 include("../src/base_model.jl")
 
-#Set Random Seed
+#Create models for comparison
 risk_abm_high = flood_ABM(Elevation)
 ##Repeat for low risk aversion (ra = 0.7)
 risk_abm_low = flood_ABM(Elevation, 0.7)
@@ -68,13 +68,21 @@ averse_results = Plots.plot(model_plot, agent_plot, fp_plot, layout = (3,1), dpi
 
 savefig(averse_results, "test/Test_visuals/averse_results.png")
 
-#Spatial Plots
-#Random.seed!(246)
+##Spatial Plots
 risk_abm_high = flood_ABM(Elevation)
 step!(risk_abm_high, agent_step!, model_step!,25)
-risk_fig, ax, abmobs = abmplot(risk_abm_high,; plotkwargs...)
+#Create Plot
+risk_fig, ax, abmobs = abmplot(risk_abm_high; plotkwargs...)
+#Change resolution of scene
+resize!(risk_fig.scene, (1500,1500))
 colsize!(risk_fig.layout, 1, Aspect(1, 1.0))
+
 display(risk_fig)
 Makie.save("test/Test_visuals/risk_fig.png", risk_fig)
+
+##Create ABM video
+"Need to fix resizing of video output"
+abmvideo("test/Test_visuals/risk_averse_abm.mp4", risk_abm_high,
+agent_step!, model_step!; title = "Flood ABM", spf = 1, frames = 99, showstep = true, plotkwargs...)
 
 

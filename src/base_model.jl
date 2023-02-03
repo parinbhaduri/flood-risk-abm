@@ -82,7 +82,7 @@ end
 
 
 ### agent and model step functions  
-#using .AgentFunctions 
+
 #For Family
 function agent_step!(agent::Family, model::ABM)
     agent_prob!(agent, model)
@@ -100,7 +100,7 @@ end
 
 
 #model step defines dynamic progression of simulation
-#using .ModelFunctions
+
 include("model_step.jl")
 function model_step!(model::ABM)
     model.tick += 1

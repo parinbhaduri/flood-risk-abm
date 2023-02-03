@@ -1,10 +1,13 @@
 
 using Agents
 
-#For Family
+###3For Family
 
 ## Calculate Agent Probability to act
 function agent_prob!(agent::Family, model::ABM)
+    """Function determines probability of agent action
+    using a risk aversion function.
+    Output updates agent's action property""" 
     #Calculate logistic Probability
     year = model.tick
     mem = model.memory
@@ -68,4 +71,3 @@ function flooded!(agent::House, model::ABM)
     agent.flood_mem = sum(agent.flood[time_back])
 end
 
-mem_agents = [n for n in allagents(risk_abm_high) if n isa House]
