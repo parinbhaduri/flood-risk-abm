@@ -1,4 +1,4 @@
-#Code for plot attributes 
+"""Code for plot attributes when visualizing spatial plots"""
 using InteractiveDynamics, GLMakie, Random
 
 Floodcolor(agent::Family) = agent.action == true ? :green : :black 

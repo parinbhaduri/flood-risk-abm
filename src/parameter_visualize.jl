@@ -1,3 +1,5 @@
+"""Code blocks to visualize model properties"""
+
 using InteractiveDynamics, GLMakie, Plots, Distributions, LinearAlgebra
 
 #Graph Agent action probability
