@@ -1,7 +1,7 @@
 
 using Agents
 
-###3For Family
+###For Family
 
 ## Calculate Agent Probability to act
 function agent_prob!(agent::Family, model::ABM)
@@ -33,8 +33,8 @@ function agent_prob!(agent::Family, model::ABM)
 end
 
 ## Create Function for Family agent to calculate utility
-function exp_utility(house::House)
-    mem = 10
+function exp_utility(house::House, model::ABM)
+    mem = model.memory
     c1 = 294707 #SqFeet coef
     c2 = 130553 #Age coef
     c3 = 128990 #Stories coef

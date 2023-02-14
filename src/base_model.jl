@@ -14,7 +14,7 @@ include("agent_types.jl")
 include("agent_step.jl")
 
 #Set desired flood record
-record = noflood_levee
+record = copy(flood_record)
 
 #Initialize model 
 function flood_ABM(Elevation, risk_averse = 0.3,levee = nothing;  #risk_averse: Decimal between 0 and 1
@@ -27,7 +27,7 @@ function flood_ABM(Elevation, risk_averse = 0.3,levee = nothing;  #risk_averse: 
     space = GridSpace(griddims)
     
     properties = Dict(:Elevation => Elevation, :levee => levee, :Flood_depth => flood_depth, :risk_averse => risk_averse,
-     :memory => 10, :tick => 1)
+     :memory => 10, :tick => 0)
     
 
     model = ABM(
@@ -105,6 +105,7 @@ function model_step!(model::ABM)
     model.tick += 1
     flood_GEV!(model)
     relocation!(model)
+    
         
 end
 

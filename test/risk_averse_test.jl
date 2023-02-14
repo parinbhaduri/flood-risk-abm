@@ -39,7 +39,7 @@ display(risk_exp_fig)
 using Plots
 
 ##Try ensemble run
-adf, _ = ensemblerun!([risk_abm_high risk_abm_low], agent_step!, model_step!, 50; adata)
+adf, _ = ensemblerun!([risk_abm_high risk_abm_low], agent_step!, model_step!, 50, agents_first = false; adata)
 #plot agents deciding to move
 agent_plot = Plots.plot(adf.step, adf.count_action_fam, group = adf.ensemble, label = ["high" "low"], 
 legendfontsize = 12, linecolor = [housecolor[6] housecolor[2]], lw = 5)

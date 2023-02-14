@@ -34,9 +34,10 @@ flood_record = [GEV_event(gev_rng) for _ in 1:100]
 ##Create flood record with no floods above 100 yr
 
 #Copy record
-noflood_levee = flood_record 
+noflood_levee = copy(flood_record) 
 
 noflood_levee[noflood_levee .> 12] .= 10
 
 
+#Plots.plot([1:51], [flood_record[1:51] noflood_levee[1:51]])
 
