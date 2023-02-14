@@ -12,16 +12,15 @@ include("../data/GEV.jl")
 #For Agents:
 include("agent_types.jl")
 include("agent_step.jl")
-#Define Agent Types
 
-#using .FloodAgents
-
+#Set desired flood record
+record = noflood_levee
 
 #Initialize model 
 function flood_ABM(Elevation, risk_averse = 0.3,levee = nothing;  #risk_averse: Decimal between 0 and 1
-    flood_depth = flood_record,
-    N = 600,
-    M = 30, 
+    flood_depth = record,
+    N = 600, #Number of family agents to create
+    M = 30,  #Dim of grid
     griddims = (M, M),
     seed = 1897,
 )

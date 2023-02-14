@@ -31,8 +31,12 @@ end
 gev_rng = MersenneTwister(1897)
 flood_record = [GEV_event(gev_rng) for _ in 1:100]
 
-sum(flood_record .> 12)
+##Create flood record with no floods above 100 yr
 
+#Copy record
+noflood_levee = flood_record 
+
+noflood_levee[noflood_levee .> 12] .= 10
 
 
 

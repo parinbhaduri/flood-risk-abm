@@ -11,11 +11,11 @@ y2 = [1/(1+ exp(-10(i - 0.7))) for i in x]
 y3 = [0 for i in x]
 log_fig = Plots.plot(x,[y0 y1 y y2 y3], label = ["Ra = 0" "Ra = 0.3" "Ra = 0.5" "Ra = 0.7" "Ra = 1"], lw = 3,
  legend = :outertopright)
-Plots.xlabel!("Flood Events")
+Plots.xlabel!("Flood Events per Decade")
 Plots.ylabel!("Action Probability")
 savefig(log_fig, "src/Parameter_visual/log_func.png")
 
-#Create heatmap for Flood level GEV_return
+###Create heatmap for Flood level GEV_return
 figure = (; resolution=(600, 400), dpi = 300, font="CMU Serif")
 #Import Elevation
 include("../data/Elevation.jl")
@@ -40,7 +40,7 @@ figure_flo_ret = Plots.heatmap(1:30,1:30, transpose(flood_return), levels = 4,
 #fig
 savefig(figure_flo_ret, "src/Parameter_visual/figure_elev.png")
 
-##Create heatmap for Utility 
+###Create heatmap for Utility 
 #Create utility matrix
 util_mat = zeros(30,30)
 model_houses = [n for n in allagents(risk_abm_high) if n isa House]
