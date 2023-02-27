@@ -53,6 +53,19 @@ for house in model_houses
     util_mat[house.pos[1], house.pos[2]] = house_price
 end
 
+#test house prop csv file
+house_prop = DataFrame(load("../data/house_prop_synth.csv"))
+util_mat = zeros(30,30)
+c1 = 294707 #SqFeet coef
+c2 = 130553 #Age coef
+c3 = 128990 #Stories coef
+c4 = 154887 #Baths coef
+for row in eachrow(house_prop)
+    house_price = c1 * row.SqFeet + c2 * row.Age + c3 * row.Stories + c4 * row.Baths
+    util_mat[Int(row.pos_x), Int(row.pos_y)] = house_price
+end
+
+
 figure_utility = Plots.heatmap(1:30,1:30, transpose(util_mat),
     seriescolor=reverse(cgrad(:curl, [0.6,0.8])), colorbar_tickfontsize = 20, Figure = figure)
 

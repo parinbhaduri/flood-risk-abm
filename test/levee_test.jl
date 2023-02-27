@@ -13,7 +13,7 @@ include("../src/visual_attrs.jl")
 
 #Create interactive plot
 risk_fig_100, ax_100, abmobs_100 = abmplot(risk_abm_100_high;
-agent_step!, model_step!, Params, plotkwargs...)
+agent_step!, model_step!, agents_first = false, Params, plotkwargs...)
 display(risk_fig_100)
 
 action(agent) = agent.action == true
@@ -67,7 +67,7 @@ savefig(levee_results, "test/Test_visuals/levee_results.png")
 #Spatial Plots
 
 risk_abm_100_high = flood_ABM(Elev_100, 0.3, 1/100)
-step!(risk_abm_100_high, agent_step!, model_step!,25)
+step!(risk_abm_100_high, agent_step!, model_step!, 25, false)
 risk_fig_100, ax, abmobs = abmplot(risk_abm_100_high,; plotkwargs...)
 
 display(risk_fig_100)

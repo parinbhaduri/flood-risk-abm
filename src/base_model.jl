@@ -19,9 +19,8 @@ record = copy(flood_record)
 #Initialize model 
 function flood_ABM(Elevation, risk_averse = 0.3,levee = nothing;  #risk_averse: Decimal between 0 and 1
     flood_depth = record,
-    N = 600, #Number of family agents to create
-    M = 30,  #Dim of grid
-    griddims = (M, M),
+    N = 600, #Number of family agents to create 
+    griddims = size(Elevation), #Dim of grid
     seed = 1897,
 )
     space = GridSpace(griddims)
