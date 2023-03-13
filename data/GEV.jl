@@ -20,6 +20,14 @@ function GEV_return(rp,mu = μ, sig = σ, xi = ξ)
     return z_p
 end
 
+#Define Function to calculate return period from return level
+function GEV_rp(z_p, mu = μ, sig = σ, xi = ξ)
+    y_p = 1 + (xi * ((z_p - mu)/sig))
+    rp = -exp(-y_p^(-1/xi)) + 1
+    rp = round(rp, digits = 3)
+    return 1/rp
+end
+
 #Create GEV distribution from parameters
 function GEV_event(rng;
     d = GEV_d) #input GEV distribution 
