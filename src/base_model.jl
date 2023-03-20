@@ -13,12 +13,10 @@ include("../data/GEV.jl")
 include("agent_types.jl")
 include("agent_step.jl")
 
-#Set desired flood record
-record = copy(flood_record)
 
 #Initialize model 
-function flood_ABM(Elevation, risk_averse = 0.3,levee = nothing;  #risk_averse: Decimal between 0 and 1
-    flood_depth = record,
+function flood_ABM(Elevation; risk_averse = 0.3, levee = nothing,  #risk_averse: Decimal between 0 and 1
+    flood_depth = flood_record,
     N = 600, #Number of family agents to create 
     griddims = size(Elevation), #Dim of grid
     seed = 1897,

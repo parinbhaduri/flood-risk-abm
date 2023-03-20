@@ -110,15 +110,7 @@ unit_fig, ax, abmobs = abmplot(unit_model, enable_inspection = true ; plotkwargs
 
 display(unit_fig)
 
-##Create explore plot to gather data
-#collect data
-#for model
-action(agent) = agent.action == true
-#filter out houses
-fam(agent) = agent isa Family
-#count Families in floodplain
-f_depth = GEV_return(1/100)
-floodplain(agent) = agent.pos in Tuple.(findall(<(f_depth), Elevation))
+
 adata = [(action, count, fam), (floodplain, count, fam)]
 #mdata = [:Flood_depth]
 
@@ -126,7 +118,7 @@ adata = [(action, count, fam), (floodplain, count, fam)]
 using Plots
 ##Create models
 unit_model_high = flood_ABM(Elevation)
-unit_model_low = flood_ABM(Elevation, 0.7)
+unit_model_low = flood_ABM(Elevation; risk_averse =  0.7)
 ##Try ensemble run
 adf, _ = ensemblerun!([unit_model_high unit_model_low], agent_step_unit!, model_step_noflood!, 50, agents_first = false; adata)
 #plot agents deciding to move

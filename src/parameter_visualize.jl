@@ -1,6 +1,6 @@
 """Code blocks to visualize model properties"""
 
-using InteractiveDynamics, GLMakie, Plots, Distributions, LinearAlgebra
+using GLMakie, Plots, Distributions, LinearAlgebra
 
 #Graph Agent action probability
 x = range(0,1, length = 100)
