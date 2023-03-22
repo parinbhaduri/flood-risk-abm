@@ -4,6 +4,7 @@ using Random
 using Statistics
 using LinearAlgebra
 using Distributions
+using DataFrames
 
 #Import Elevation and Flood Matrix
 include("../data/Elevation.jl")
@@ -16,7 +17,7 @@ include("agent_step.jl")
 
 #Initialize model 
 function flood_ABM(Elevation; risk_averse = 0.3, levee = nothing,  #risk_averse: Decimal between 0 and 1
-    flood_depth = flood_record,
+    flood_depth = copy(flood_record),
     N = 600, #Number of family agents to create 
     griddims = size(Elevation), #Dim of grid
     seed = 1897,

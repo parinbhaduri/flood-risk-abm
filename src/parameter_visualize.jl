@@ -9,7 +9,7 @@ y0 = [1/(1+ exp(-20(i - 0.1))) for i in x]
 y1 = [1/(1+ exp(-10(i - 0.3))) for i in x]
 y2 = [1/(1+ exp(-10(i - 0.7))) for i in x]
 y3 = [0 for i in x]
-log_fig = Plots.plot(x,[y0 y1 y y2 y3], label = ["Ra = 0" "Ra = 0.3" "Ra = 0.5" "Ra = 0.7" "Ra = 1"], lw = 3,
+log_fig = Plots.plot(x,[y1 y y2], label = ["High RA" "Medium RA" "Low RA"], lw = 3,
  legend = :outertopright)
 Plots.xlabel!("Flood Events per Decade")
 Plots.ylabel!("Action Probability")

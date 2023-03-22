@@ -3,7 +3,7 @@ using Plots,InteractiveDynamics, GLMakie, Random
 """Code for plot attributes when visualizing spatial plots"""
 Floodcolor(agent::Family) = agent.action == true ? :green : :black 
 const housecolor = cgrad(:dense, 11, categorical = true)
-Floodcolor(agent::House) =  housecolor[Int64(agent.flood_mem+1)]
+Floodcolor(agent::House) = housecolor[Int64(agent.flood_mem+1)]
 
 Floodshape(agent::Family) = '⌂'
 Floodsize(agent::Family) = 60

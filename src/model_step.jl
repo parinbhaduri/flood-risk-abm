@@ -4,8 +4,8 @@
 function flood_GEV!(model::ABM)
     if model.levee != nothing
         year = model.tick
-        levee_depth = GEV_return(model.levee)
-        flood_levee = model.Flood_depth[year] - levee_depth
+        levee_height = GEV_return(model.levee)
+        flood_levee = model.Flood_depth[year] - levee_height
         model.Flood_depth[year] = flood_levee < 0 ? 0 : flood_levee
     end
 end

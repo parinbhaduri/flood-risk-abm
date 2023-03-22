@@ -1,13 +1,14 @@
 #initialize model
 include("../src/base_model.jl")
+#Define plot attributes
+include("../src/visual_attrs.jl")
 
 #Create models for comparison
 risk_abm_high = flood_ABM(Elevation)
 ##Repeat for low risk aversion (ra = 0.7)
-risk_abm_low = flood_ABM(Elevation, 0.7)
+risk_abm_low = flood_ABM(Elevation; risk_averse =  0.7)
 
-#Define plot attributes
-include("../src/visual_attrs.jl")
+
 
 
 ##Create interactive plot
@@ -49,18 +50,6 @@ annotate!(32,14,Plots.text("100-year level", family="serif", pointsize = 18, col
 #Plots.ylims!(0,30)
 Plots.ylabel!("Flood Depth", pointsize = 24)
 
-#Plot Damages 
-damage_plot = Plots.scatter(mdf.floodepth, mdf.depth_damage, group = mdf.ensemble, label = ["high" "low"], 
-legend = :bottomright,legendfontsize = 12, markercolor = [housecolor[7] housecolor[3]])
-Plots.ylabel!("Avg. Depth Difference", pointsize = 24)
-Plots.xlabel!("Return Period (Years)", pointsize = 24)
-#Density plot
-using StatsPlots
-StatsPlots.density(mdf.depth_damage, group = mdf.ensemble, label = ["high" "low"]
-,legendfontsize = 12, linecolor = [housecolor[7] housecolor[3]], lw = 3)
-Plots.xlabel!("Avg. Depth Difference", pointsize = 24)
-Plots.ylabel!("Probability", pointsize = 24)
-
 #create subplot
 averse_results = Plots.plot(model_plot, agent_plot, fp_plot, layout = (3,1), dpi = 300, size = (500,600))
 
@@ -69,8 +58,6 @@ savefig(averse_results, "test/Test_visuals/averse_results.png")
 
 #Create subplot of flood record and depth Damages
 damage_results = Plots.plot(model_plot, damage_plot, layout = (2,1), dpi = 300, size = (500,600))
-
-
 
 
 ##Spatial Plots
@@ -84,4 +71,56 @@ colsize!(risk_fig.layout, 1, Aspect(1, 1.0))
 display(risk_fig)
 
 Makie.save("test/Test_visuals/risk_fig.png", risk_fig)
+
+
+
+### Repeat Above with ensemble runs to create credible intervals
+
+#Create model ensemble with different seeds 
+models_high = [flood_ABM(Elevation; seed = i) for i in 1000:2000]
+models_low = [flood_ABM(Elevation; risk_averse = 0.7, seed = i) for i in 1000:2000]
+##Try ensemble run
+adf_high, _ = ensemblerun!(models_high, agent_step!, model_step!, 50, agents_first = false; adata)
+adf_low, _ = ensemblerun!(models_low, agent_step!, model_step!, 50, agents_first = false; adata)
+
+gdf_high = groupby(adf_high, :step)
+gdf_high_med = combine(gdf_high, [:count_action_fam :count_floodplain_fam] .=> median; renamecols=false)
+#Create 95% CIs
+gdf_high_25 = combine(gdf_high,[:count_action_fam :count_floodplain_fam] .=> x -> quantile(x,0.025); renamecols=false)
+gdf_high_975 = combine(gdf_high,[:count_action_fam :count_floodplain_fam] .=> x -> quantile(x,0.975); renamecols=false)
+
+gdf_low = groupby(adf_low, :step)
+gdf_low_med = combine(gdf_low, [:count_action_fam :count_floodplain_fam] .=> median; renamecols=false)
+#Create 95% CIs
+gdf_low_25 = combine(gdf_low,[:count_action_fam :count_floodplain_fam] .=> x -> quantile(x,0.025); renamecols=false)
+gdf_low_975 = combine(gdf_low,[:count_action_fam :count_floodplain_fam] .=> x -> quantile(x,0.975); renamecols=false)
+
+#plot agents deciding to move
+agent_plot = Plots.plot(adf_high.step[1:51], [gdf_high_med.count_action_fam gdf_low_med.count_action_fam], label = ["high" "low"], 
+legendfontsize = 12, linecolor = [housecolor[6] housecolor[2]], lw = 3.5)
+Plots.plot!(adf_high.step[1:51], [gdf_high_25.count_action_fam gdf_low_25.count_action_fam], fillrange=[gdf_high_975.count_action_fam gdf_low_975.count_action_fam],
+ fillalpha=0.35, alpha =0.35, color=[housecolor[6] housecolor[2]], label=false)
+#Plots.ylims!(0,80)
+Plots.ylabel!("Moving Agents", pointsize = 24)
+
+#plot agents in the floodplain
+fp_plot = Plots.plot(adf_high.step[1:51], [gdf_high_med.count_floodplain_fam gdf_low_med.count_floodplain_fam], label = ["high" "low"], 
+legend = :bottomright,legendfontsize = 12, linecolor = [housecolor[7] housecolor[3]], lw = 3.5)
+Plots.plot!(adf_high.step[1:51], [gdf_high_25.count_floodplain_fam gdf_low_25.count_floodplain_fam], fillrange=[gdf_high_975.count_floodplain_fam gdf_low_975.count_floodplain_fam],
+ fillalpha=0.35, alpha =0.35, color=[housecolor[6] housecolor[2]], label=false)
+Plots.ylabel!("Floodplain Pop.")
+Plots.ylims!(80,240)
+Plots.xlabel!("Year", pointsize = 24)
+#plot flood depths
+model_plot = Plots.plot(adf_high.step[1:51], models_high[1].Flood_depth[1:51], legend = false,
+ linecolor = housecolor[10], lw = 5)
+#Add line showing 100- yr level 
+flood_100 = [GEV_return(1/100) for _ in 1:51]
+Plots.plot!(adf_high.step[1:51],flood_100, line = :dash, lw = 3)
+annotate!(32,14,Plots.text("100-year level", family="serif", pointsize = 18, color = RGB(213/255,111/255,62/255)))
+#Plots.ylims!(0,30)
+Plots.ylabel!("Flood Depth", pointsize = 24)
+
+#create subplot
+averse__ensemble_results = Plots.plot(model_plot, agent_plot, fp_plot, layout = (3,1), dpi = 300, size = (500,600))
 
