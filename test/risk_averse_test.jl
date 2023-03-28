@@ -122,5 +122,7 @@ annotate!(32,14,Plots.text("100-year level", family="serif", pointsize = 18, col
 Plots.ylabel!("Flood Depth", pointsize = 24)
 
 #create subplot
-averse__ensemble_results = Plots.plot(model_plot, agent_plot, fp_plot, layout = (3,1), dpi = 300, size = (500,600))
+averse_ensemble_results = Plots.plot(model_plot, agent_plot, fp_plot, layout = (3,1), dpi = 300, size = (500,600))
+
+savefig(averse_ensemble_results, "test/Test_visuals/averse_ensemble.png")
 

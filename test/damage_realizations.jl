@@ -30,6 +30,7 @@ function depth_difference(model::ABM, flood_rps)
     return occupied_feet
 end
 
+#For single seed, comparing high and low
 risk_abm_high = flood_ABM(Elevation)
 risk_abm_low = flood_ABM(Elevation; risk_averse = 0.7)
 
@@ -52,6 +53,44 @@ Plots.plot(flood_rps, [occupied_diff_high occupied_diff_low], labels = ["high" "
 Plots.xlabel!("Return Period")
 Plots.ylabel!("Difference in Occupied-Exposure")
 
+
+
+
+
+
+
+#Multiple seeds
+seed_range = range(1000,2000, step = 1)
+
+models = [flood_ABM(Elevation; flood_depth = [GEV_event(MersenneTwister(i)) for _ in 1:100], seed = i) for i in seed_range]
+models_levee = [flood_ABM(Elevation; flood_depth = [GEV_event(MersenneTwister(i)) for _ in 1:100], levee = 1/100, seed = i) for i in seed_range]
+#Run models
+_ = ensemblerun!(models, agent_step!, model_step!, 50, agents_first = false)
+_ = ensemblerun!(models_levee, agent_step!, model_step!, 50, agents_first = false)
+
+flood_rps = range(10,1000, step = 10)
+#Create matrix to store 
+occupied = zeros(length(flood_rps),length(seed_range))
+occupied_levee = copy(occupied)
+for i in eachindex(models)
+    occupied[:,i] = depth_difference(models[i], flood_rps)
+end
+
+for i in eachindex(models_levee)
+    occupied_levee[:,i] = depth_difference(models_levee[i], flood_rps)
+end
+
+#Take difference of two matrices
+occ_diff = occupied_levee - occupied
+
+occ_med = mapslices(x -> median(x), occ_diff, dims=2)
+occ_quantiles = mapslices(x -> quantile(x, [0.025, 0.975]), occ_diff, dims=2)
+
+Plots.plot(flood_rps, occ_med, xscale = :log10)
+Plots.plot!(flood_rps, occ_quantiles[:,1], fillrange=occ_quantiles[:,2],
+ fillalpha=0.35, alpha =0.35, label=false)
+Plots.xlabel!("Return Period")
+Plots.ylabel!("Difference in Occupied-Exposure")
 """
 damage_df = init_model_dataframe(risk_abm_high, mdata)
 
