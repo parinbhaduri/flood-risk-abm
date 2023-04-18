@@ -18,13 +18,14 @@ include("agent_step.jl")
 #Initialize model 
 function flood_ABM(Elevation; risk_averse = 0.3, levee = nothing,  #risk_averse: Decimal between 0 and 1
     flood_depth = copy(flood_record),
+    breach = false, #Determine if Levee breaching is included in model
     N = 600, #Number of family agents to create 
     griddims = size(Elevation), #Dim of grid
     seed = 1897,
 )
     space = GridSpace(griddims)
     
-    properties = Dict(:Elevation => Elevation, :levee => levee, :Flood_depth => flood_depth, :risk_averse => risk_averse,
+    properties = Dict(:Elevation => Elevation, :levee => levee, :breach => breach, :Flood_depth => flood_depth, :risk_averse => risk_averse,
      :memory => 10, :tick => 0)
     
 

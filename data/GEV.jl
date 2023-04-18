@@ -46,6 +46,4 @@ noflood_levee = copy(flood_record)
 
 noflood_levee[noflood_levee .> 12] .= 10
 
-
-#Plots.plot([1:51], [flood_record[1:51] noflood_levee[1:51]])
-
+###Levee Breaching functions

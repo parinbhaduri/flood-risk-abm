@@ -1,4 +1,43 @@
 
+#levee breaching probability calculation
+function levee_breach(flood_height)
+    C = 0.237
+    η = flood_height
+    L = 30
+    n_min = 0.25
+    n_max = 0.55
+    n_0 = 0.45
+
+    p_0 = 2*(n_max - n_min)^-1
+
+    G_min = C *((1-n_max)/n_max) - (η/L)
+    G_0 = C *((1-n_0)/n_0) - (η/L)
+    G_max = C *((1-n_min)/n_min) - (η/L)
+
+    if G_min > 0
+        pf = 0
+    elseif G_min <= 0 <= G_0
+        t1 = 1 + (n_0/(n_max - n_0))
+        t2 = (1/(G_min + (η/L) + C)) - (1/((η/L) + C))
+        t3 = (p_0 * C^2)/(2*(n_max - n_0))
+        t4 = (1/(G_min + (η/L) + C)^2) - (1/((η/L) + C)^2)
+
+        pf = (p_0 * C * t1 * t2) - (t3 * t4)
+
+    elseif G_0 < 0 <= G_max
+        t1 = n_min/(n_0 - n_min)
+        t2 = (1/((η/L) + C)) - (1/(G_0 + (η/L) + C))
+        t3 = (p_0 * C^2)/(2*(n_0 - n_min))
+        t4 = (1/((η/L) + C)^2) - (1/(G_0 + (η/L) + C)^2)
+
+        p_G0 = p_0 * C *(1 + (n_0/(n_max - n_0))) * ((1/(G_min + (η/L) + C)) - (1/(G_0 + (η/L) + C))) - ((p_0 * C^2)/(2*(n_max - n_0))) * ((1/(G_min + (η/L) + C)^2) - (1/(G_0 + (η/L) + C)^2))
+
+        pf = p_G0 + (p_0 * C * t1 * t2) - (t3 * t4)
+    else
+        pf = 1
+    end
+    return pf
+end
 
 #Calculate flood depth and update model property
 function flood_GEV!(model::ABM)
@@ -6,9 +45,20 @@ function flood_GEV!(model::ABM)
         year = model.tick
         levee_height = GEV_return(model.levee)
         flood_levee = model.Flood_depth[year] - levee_height
-        model.Flood_depth[year] = flood_levee < 0 ? 0 : flood_levee
+        if model.breach == true
+            #calculate breach probability
+            prob_fail = levee_breach(model.Flood_depth[year])
+            #Determine if Levee Breaches
+            breach_outcome = rand(model.rng, Binomial(1,prob_fail))
+            model.Flood_depth[year] = breach_outcome == 1 ? model.Flood_depth[year] : flood_levee
+        else
+            model.Flood_depth[year] = flood_levee < 0 ? 0 : flood_levee
+        end
     end
 end
+
+
+
 #Relocation of Family Agents
 
 function relocation!(model::ABM)

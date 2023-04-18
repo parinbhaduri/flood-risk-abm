@@ -76,6 +76,23 @@ col_mat = rand(1:11,30,30)
 fig_colbar = Plots.heatmap(1:30,1:30, col_mat,
 seriescolor= housecolor, colorbar_tickfontsize = 20, Figure = figure)
 savefig(fig_colbar, "src/Parameter_visual/fig_colbar.png")
+
+#Levee Breach Probability surface
+#define constants
+
+water_level = [n for n in range(0,15,step=0.1)]
+
+levee_fail = levee_breach.(water_level)
+
+Plots.plot(water_level, levee_fail, lw = 2.5)
+Plots.xlabel!("Flood Depth")
+Plots.ylabel!("Failure Probability")
+
+
+
+
+
+
 """
 model = flood_ABM(Elevation)
 params = Dict(:risk_averse => 0:0.1:1,)
