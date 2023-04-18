@@ -1,12 +1,12 @@
 
 #levee breaching probability calculation
-function levee_breach(flood_height)
+function levee_breach(flood_height; n_null = 0.45)
     C = 0.237
     η = flood_height
     L = 30
     n_min = 0.25
     n_max = 0.55
-    n_0 = 0.45
+    n_0 = n_null
 
     p_0 = 2*(n_max - n_min)^-1
 
@@ -50,10 +50,9 @@ function flood_GEV!(model::ABM)
             prob_fail = levee_breach(model.Flood_depth[year])
             #Determine if Levee Breaches
             breach_outcome = rand(model.rng, Binomial(1,prob_fail))
-            model.Flood_depth[year] = breach_outcome == 1 ? model.Flood_depth[year] : flood_levee
-        else
-            model.Flood_depth[year] = flood_levee < 0 ? 0 : flood_levee
+            flood_levee = breach_outcome == 1 ? model.Flood_depth[year] : flood_levee
         end
+        model.Flood_depth[year] = flood_levee < 0 ? 0 : flood_levee
     end
 end
 

@@ -1,9 +1,9 @@
 #Compare regular model run with levee inclusion
 include("../src/base_model.jl")
 #set seed
-risk_abm_100_high = flood_ABM(Elevation; levee = 1/100)
+risk_abm_100_high = flood_ABM(Elevation; levee = 1/100, breach = true)
 #low risk aversion
-risk_abm_100_low = flood_ABM(Elevation; risk_averse = 0.7, levee = 1/100)
+risk_abm_100_low = flood_ABM(Elevation; risk_averse = 0.7, levee = 1/100, breach = true)
 
 
 #Define plot attributes
@@ -35,9 +35,9 @@ Plots.ylims!(80,240)
 Plots.xlabel!("Year", pointsize = 24)
 
 #plot flood depths
-flood_depth_levee = copy(risk_abm_high.Flood_depth)
-flood_depth_levee[flood_depth_levee .< GEV_return(1/100)] .= 0
-model_plot_100 = Plots.plot(adf_100.step[1:51], flood_depth_levee[1:51], legend = false,
+#flood_depth_levee = copy(risk_abm_high.Flood_depth)
+#flood_depth_levee[flood_depth_levee .< GEV_return(1/100)] .= 0
+model_plot_100 = Plots.plot(adf_100.step[1:51], risk_abm_100_high.Flood_depth[1:51], legend = false,
  linecolor = [housecolor[10] housecolor[5]], lw = 5)
  #Add line showing 100- yr level 
 flood_100 = [GEV_return(1/100) for _ in 1:51]

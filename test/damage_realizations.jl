@@ -11,21 +11,34 @@ function depth_difference(model::ABM, flood_rps)
         f_depth = GEV_return(1/rp)
         #Calculate floodplain based on flood return period 
         floodplain = Tuple.(findall(<(f_depth), model.Elevation))
+        #Set intial breach values (prob_fail = 0 if breach doesnt occur)
+        f_breach = copy(f_depth)
+        prob_fail = 0
         #Subtract levee height from flood depth if levee is present
         if model.levee != nothing
             depth_levee = f_depth - GEV_return(model.levee)
             f_depth = depth_levee > 0 ? depth_levee : 0
+            #Calculate flood depth if breach occurs
+            if model.breach == true
+                #calculate breach probability for flood return period
+                prob_fail = levee_breach(f_depth)
+            end
         end
-
         damage_agents_elev = [model.Elevation[a.pos[1], a.pos[2]] for a in allagents(model) if a isa Family && a.pos in floodplain]  
-        #Subtract Agent Elevation from flood depth at given timestep
+         #Subtract Agent Elevation from flood depth at given timestep
         depth_diff = f_depth .- damage_agents_elev
+        depth_breach = f_breach .- damage_agents_elev
         #turn negative values (meaning cell is not flooded) to zero
         depth_diff[depth_diff .< 0] .= 0
+        depth_breach[depth_breach .< 0] .= 0
 
         depth_diff_avg = length(depth_diff) > 0 ? sum(depth_diff) : 0
+        depth_breach_avg = length(depth_breach) > 0 ? sum(depth_breach) : 0
+
+        occ_avg = (prob_fail * depth_breach_avg) + ((1-prob_fail) * depth_diff_avg)
         #Add value to flood_rps
-        append!(occupied_feet, depth_diff_avg)
+        append!(occupied_feet, occ_avg)
+        
     end
     return occupied_feet
 end
@@ -34,8 +47,8 @@ end
 risk_abm_high = flood_ABM(Elevation)
 risk_abm_low = flood_ABM(Elevation; risk_averse = 0.7)
 
-risk_abm_100_high = flood_ABM(Elevation;levee = 1/100)
-risk_abm_100_low = flood_ABM(Elevation; risk_averse = 0.7, levee = 1/100)
+risk_abm_100_high = flood_ABM(Elevation;levee = 1/100, breach = true)
+risk_abm_100_low = flood_ABM(Elevation; risk_averse = 0.7, levee = 1/100, breach = true)
 #Run models for 50 years
 _ = ensemblerun!([risk_abm_high risk_abm_low risk_abm_100_high risk_abm_100_low], agent_step!, model_step!, 50, agents_first = false)
 
