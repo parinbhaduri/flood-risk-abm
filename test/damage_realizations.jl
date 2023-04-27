@@ -21,7 +21,7 @@ function depth_difference(model::ABM, flood_rps)
             #Calculate flood depth if breach occurs
             if model.breach == true
                 #calculate breach probability for flood return period
-                prob_fail = levee_breach(f_depth)
+                prob_fail = levee_breach(f_depth, n_null = 0.5)
             end
         end
         damage_agents_elev = [model.Elevation[a.pos[1], a.pos[2]] for a in allagents(model) if a isa Family && a.pos in floodplain]  
@@ -76,7 +76,7 @@ Plots.ylabel!("Difference in Occupied-Exposure")
 seed_range = range(1000,2000, step = 1)
 
 models = [flood_ABM(Elevation; flood_depth = [GEV_event(MersenneTwister(i)) for _ in 1:100], seed = i) for i in seed_range]
-models_levee = [flood_ABM(Elevation; flood_depth = [GEV_event(MersenneTwister(i)) for _ in 1:100], levee = 1/100, seed = i) for i in seed_range]
+models_levee = [flood_ABM(Elevation; flood_depth = [GEV_event(MersenneTwister(i)) for _ in 1:100], levee = 1/100, breach = true, seed = i) for i in seed_range]
 #Run models
 _ = ensemblerun!(models, agent_step!, model_step!, 50, agents_first = false)
 _ = ensemblerun!(models_levee, agent_step!, model_step!, 50, agents_first = false)
@@ -99,8 +99,8 @@ occ_diff = occupied_levee - occupied
 occ_med = mapslices(x -> median(x), occ_diff, dims=2)
 occ_quantiles = mapslices(x -> quantile(x, [0.025, 0.975]), occ_diff, dims=2)
 
-Plots.plot(flood_rps, occ_med, xscale = :log10)
-Plots.plot!(flood_rps, occ_quantiles[:,1], fillrange=occ_quantiles[:,2],
+Plots.plot(flood_rps, occ_med, linecolor = "green", lw = 2.5, xscale = :log10, label = false)
+Plots.plot!(flood_rps, occ_quantiles[:,1], fillrange=occ_quantiles[:,2], linecolor = "green", fillcolor = "green",
  fillalpha=0.35, alpha =0.35, label=false)
 Plots.xlabel!("Return Period")
 Plots.ylabel!("Difference in Occupied-Exposure")
