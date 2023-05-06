@@ -10,7 +10,7 @@ risk_abm_low = flood_ABM(Elevation; risk_averse =  0.7)
 
 
 
-
+using Plots
 ##Create interactive plot
 #risk_fig, ax, abmobs = abmplot(risk_abm;
 #agent_step!, model_step!, params, plotkwargs...)
@@ -24,7 +24,7 @@ mdata = [floodepth, depth_damage]
 
 
 #run model to gather data (ra = 0.3; ra = 0.7)
-using Plots
+
 
 ##Try ensemble run
 adf, mdf = ensemblerun!([risk_abm_high risk_abm_low], agent_step!, model_step!, 50, agents_first = false; adata, mdata)
