@@ -4,19 +4,9 @@ include("../src/base_model.jl")
 include("../src/visual_attrs.jl")
 
 #Create models for comparison
-risk_abm_high = flood_ABM(Elevation)
+risk_abm_high = flood_ABM(Elevation; pop_growth = 0.005)
 ##Repeat for low risk aversion (ra = 0.7)
 risk_abm_low = flood_ABM(Elevation; risk_averse =  0.7)
-
-
-
-
-##Create interactive plot
-#risk_fig, ax, abmobs = abmplot(risk_abm;
-#agent_step!, model_step!, params, plotkwargs...)
-#display(risk_fig)
-
-##Create explore plot to gather data
 
 #Save agent & model data to collect
 adata = [(action, count, fam), (floodplain, count, fam)]
@@ -24,7 +14,6 @@ mdata = [floodepth, depth_damage]
 
 
 #run model to gather data (ra = 0.3; ra = 0.7)
-using Plots
 
 ##Try ensemble run
 adf, mdf = ensemblerun!([risk_abm_high risk_abm_low], agent_step!, model_step!, 50, agents_first = false; adata, mdata)

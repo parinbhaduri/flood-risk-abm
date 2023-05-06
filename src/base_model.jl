@@ -20,13 +20,14 @@ function flood_ABM(Elevation; risk_averse = 0.3, levee = nothing,  #risk_averse:
     flood_depth = copy(flood_record),
     breach = false, #Determine if Levee breaching is included in model
     N = 600, #Number of family agents to create 
-    griddims = size(Elevation), #Dim of grid
+    griddims = size(Elevation),  #Dim of grid
+    pop_growth = 0, #Population growth at each timestep. Recorded as decimal bw 0 and 1
     seed = 1897,
 )
     space = GridSpace(griddims)
     
     properties = Dict(:Elevation => Elevation, :levee => levee, :breach => breach, :Flood_depth => flood_depth, :risk_averse => risk_averse,
-     :memory => 10, :tick => 0)
+     :memory => 10, :pop_growth => pop_growth, :tick => 0)
     
 
     model = ABM(
@@ -104,8 +105,7 @@ function model_step!(model::ABM)
     model.tick += 1
     flood_GEV!(model)
     relocation!(model)
-    
-        
+    model.pop_growth > 0 && pop_change!(model)       
 end
 
 
