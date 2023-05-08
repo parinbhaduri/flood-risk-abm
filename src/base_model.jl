@@ -99,8 +99,8 @@ end
 
 
 #model step defines dynamic progression of simulation
-
 include("model_step.jl")
+
 function model_step!(model::ABM)
     model.tick += 1
     flood_GEV!(model)

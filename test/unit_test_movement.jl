@@ -99,6 +99,7 @@ function model_step_noflood!(model::ABM)
     model.tick += 1
     flood_GEV!(model)
     relocation_noflood!(model)
+    model.pop_growth > 0 && pop_change!(model)
 end
 
 #Initialize model
@@ -115,10 +116,10 @@ adata = [(action, count, fam), (floodplain, count, fam)]
 #mdata = [:Flood_depth]
 
 ###run model to gather data (ra = 0.3; ra = 0.7)
-using Plots
+
 ##Create models
-unit_model_high = flood_ABM(Elevation)
-unit_model_low = flood_ABM(Elevation; risk_averse =  0.7)
+unit_model_high = flood_ABM(Elevation; pop_growth = 0.005)
+unit_model_low = flood_ABM(Elevation; risk_averse =  0.7, pop_growth = 0.005)
 ##Try ensemble run
 adf, _ = ensemblerun!([unit_model_high unit_model_low], agent_step_unit!, model_step_noflood!, 50, agents_first = false; adata)
 #plot agents deciding to move
@@ -131,7 +132,7 @@ Plots.ylabel!("Moving Agents", pointsize = 24)
 fp_plot = Plots.plot(adf.step, adf.count_floodplain_fam, group = adf.ensemble, label = ["high" "low"], 
 legend = :bottomright,legendfontsize = 12, linecolor = [housecolor[7] housecolor[3]], lw = 5)
 Plots.ylabel!("Floodplain Pop.")
-Plots.ylims!(80,240)
+Plots.ylims!(80,400)
 Plots.xlabel!("Year", pointsize = 24)
 #plot flood depths
 model_plot = Plots.plot(adf.step[1:51], unit_model_high.Flood_depth[1:51], legend = false,

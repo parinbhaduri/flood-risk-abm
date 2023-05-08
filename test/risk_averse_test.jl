@@ -6,7 +6,7 @@ include("../src/visual_attrs.jl")
 #Create models for comparison
 risk_abm_high = flood_ABM(Elevation; pop_growth = 0.005)
 ##Repeat for low risk aversion (ra = 0.7)
-risk_abm_low = flood_ABM(Elevation; risk_averse =  0.7)
+risk_abm_low = flood_ABM(Elevation; risk_averse =  0.7, pop_growth = 0.005)
 
 #Save agent & model data to collect
 adata = [(action, count, fam), (floodplain, count, fam)]
@@ -27,7 +27,7 @@ Plots.ylabel!("Moving Agents", pointsize = 24)
 fp_plot = Plots.plot(adf.step, adf.count_floodplain_fam, group = adf.ensemble, label = ["high" "low"], 
 legend = :bottomright,legendfontsize = 12, linecolor = [housecolor[7] housecolor[3]], lw = 5)
 Plots.ylabel!("Floodplain Pop.")
-Plots.ylims!(80,240)
+Plots.ylims!(80,300)
 Plots.xlabel!("Year", pointsize = 24)
 #plot flood depths
 model_plot = Plots.plot(adf.step[1:51], risk_abm_high.Flood_depth[1:51], legend = false,
