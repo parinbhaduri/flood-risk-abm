@@ -56,15 +56,21 @@ end
 function pop_change!(model::ABM)
     # add population growth methods
     avail_house = [n for n in allagents(model) if n isa House && length(ids_in_position(n.pos, model)) < 2]
-    #Ensure there are available houses
-    if length(avail_house) > 0
-        #Calculate number of additional agents 
-        new_pop = length([n for n in allagents(model) if n isa Family]) * model.pop_growth
-        #Match new agents with empty houses
-        for n in 1:new_pop
-            transplant = Family(nextid(model), rand(model.rng, avail_house).pos, false, rand(model.rng, 1:5), rand(model.rng, 30000:200000), 0.0)
-            add_agent_pos!(transplant, model)
+    
+    #Calculate number of additional agents 
+    new_pop = length([n for n in allagents(model) if n isa Family]) * model.pop_growth
+    #Match new agents with empty houses
+    for n in 1:new_pop
+        #Ensure there are available houses
+        if length(avail_house) == 0
+            break
         end
+        open_house = rand(model.rng, avail_house)
+        transplant = Family(nextid(model), open_house.pos, false, rand(model.rng, 1:5), rand(model.rng, 30000:200000), 0.0)
+        add_agent_pos!(transplant, model)
+        #remove open_house from avail-house
+        deleteat!(avail_house, findall(x -> x.id == open_house.id, avail_house))
+            
     end
 end
 
