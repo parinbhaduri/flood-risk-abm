@@ -4,9 +4,9 @@ include("../src/base_model.jl")
 include("../src/visual_attrs.jl")
 
 #Create models for comparison
-risk_abm_high = flood_ABM(Elevation; pop_growth = 0.005)
+risk_abm_high = flood_ABM(Elevation; pop_growth = 0.01)
 ##Repeat for low risk aversion (ra = 0.7)
-risk_abm_low = flood_ABM(Elevation; risk_averse =  0.7, pop_growth = 0.005)
+risk_abm_low = flood_ABM(Elevation; risk_averse =  0.7, pop_growth = 0.01)
 
 #Save agent & model data to collect
 adata = [(action, count, fam), (floodplain, count, fam)]

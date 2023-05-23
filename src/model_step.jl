@@ -69,28 +69,31 @@ function relocation!(model::ABM)
     #Find max utility and associated position
     #new_max = maximum(x -> x.Utility, avail_house)
     #max_house = avail_house[findfirst(x -> x.Utility == new_max, avail_house)]
-    for i in sorted_agent
-        pos_ids = ids_in_position(i, model)
-        sort_house = [id for id in pos_ids if model[id] isa House][1]
-        #Calculate agent utility at its current location
-        agent_utility = exp_utility(model[sort_house], model)
-        #Calculate Utility across all avail_house
-        #Ref sets model as a scalar for broadcasting
-        avail_utility = exp_utility.(avail_house, Ref(model))
-        #Identify house w/ max utility in avail_house
-        new_max, new_pos = findmax(avail_utility)
-        
-        #If agent's current utility is larger than max available, skip iteration
-        agent_utility > new_max && continue
-        #Update agent utility
-        i.utility = new_max
-                
-        #move agent to better utility location
-        move_agent!(i, avail_house[new_pos].pos, model)
-        #Remove max house from avail_house
-        deleteat!(avail_house, new_pos)
-        #Add agent's previous house to avail_house vector
-        push!(avail_house, model[sort_house])
+    if length(avail_house) > 0
+
+        for i in sorted_agent
+            pos_ids = ids_in_position(i, model)
+            sort_house = [id for id in pos_ids if model[id] isa House][1]
+            #Calculate agent utility at its current location
+            agent_utility = exp_utility(model[sort_house], model)
+            #Calculate Utility across all avail_house
+            #Ref sets model as a scalar for broadcasting
+            avail_utility = exp_utility.(avail_house, Ref(model))
+            #Identify house w/ max utility in avail_house
+            new_max, new_pos = findmax(avail_utility)
+            
+            #If agent's current utility is larger than max available, skip iteration
+            agent_utility > new_max && continue
+            #Update agent utility
+            i.utility = new_max
+                    
+            #move agent to better utility location
+            move_agent!(i, avail_house[new_pos].pos, model)
+            #Remove max house from avail_house
+            deleteat!(avail_house, new_pos)
+            #Add agent's previous house to avail_house vector
+            push!(avail_house, model[sort_house])
+        end
     end
 end
 
