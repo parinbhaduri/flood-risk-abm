@@ -44,20 +44,22 @@ function flood_ABM(Elevation; risk_averse = 0.3, levee = nothing,  #risk_averse:
         add_agent_single!(agent, model)
     end
 
-    #Fill model with Houses
-        #Then sample normalized values from distributions
+    ## Fill model with Houses
+    #create grid boundaries for housing properties
+    bounds = [round(i*(griddims[1]/4)) for i in 1:4]
+    #Then sample normalized values from distributions
     for p in positions(model)
-        if p[1] <= 8 
+        if p[1] <= bounds[1]
             SqFeet = (500.0 + (p[2]* 120.0)) / 4100.0
             Age = 3.0 / 5.0
             Stories = 2.0 / 5.0
             Baths = 3.0 / 5.0
-        elseif  p[1] > 8 && p[1] <= 16
+        elseif  p[1] > bounds[1] && p[1] <= bounds[2]
             SqFeet = 2000.0 / 4100.0
             Age = (p[2] / 6.0) / 5.0
             Stories = 2.0/ 5.0
             Baths = 3.0/ 5.0
-        elseif  p[1] > 16 && p[1] <= 23
+        elseif  p[1] > bounds[2] && p[1] <= bounds[3]
             SqFeet = 2000.0 / 4100.0
             Age = 3.0/ 5.0
             Stories = (p[2] / 6.0) / 5.0

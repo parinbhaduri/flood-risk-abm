@@ -98,7 +98,7 @@ legend = :bottomright,legendfontsize = 12, linecolor = [housecolor[7] housecolor
 Plots.plot!(adf_high.step[1:51], [gdf_high_25.count_floodplain_fam gdf_low_25.count_floodplain_fam], fillrange=[gdf_high_975.count_floodplain_fam gdf_low_975.count_floodplain_fam],
  fillalpha=0.35, alpha =0.35, color=[housecolor[6] housecolor[2]], label=false)
 Plots.ylabel!("Floodplain Pop.")
-Plots.ylims!(80,240)
+Plots.ylims!(0,250)
 Plots.xlabel!("Year", pointsize = 24)
 #plot flood depths
 model_plot = Plots.plot(adf_high.step[1:51], models_high[1].Flood_depth[1:51], legend = false,

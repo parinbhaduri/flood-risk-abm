@@ -42,7 +42,7 @@ savefig(figure_flo_ret, "src/Parameter_visual/figure_elev.png")
 
 ###Create heatmap for Utility 
 #Create utility matrix
-util_mat = zeros(30,30)
+util_mat = zeros(size(Elevation))
 model_houses = [n for n in allagents(risk_abm_high) if n isa House]
 c1 = 294707 #SqFeet coef
 c2 = 130553 #Age coef
@@ -66,7 +66,7 @@ for row in eachrow(house_prop)
 end
 
 
-figure_utility = Plots.heatmap(1:30,1:30, transpose(util_mat),
+figure_utility = Plots.heatmap(1:size(util_mat)[1],1:size(util_mat)[2], transpose(util_mat),
     seriescolor=reverse(cgrad(:curl, [0.6,0.8])), colorbar_tickfontsize = 20, Figure = figure)
 
 savefig(figure_utility, "src/Parameter_visual/fig_utility.png")
