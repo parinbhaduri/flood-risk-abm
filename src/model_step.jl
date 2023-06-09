@@ -77,8 +77,7 @@ function relocation!(model::ABM)
             #Calculate agent utility at its current location
             agent_utility = exp_utility(model[sort_house], model)
             #Calculate Utility across all avail_house
-            #Ref sets model as a scalar for broadcasting
-            avail_utility = exp_utility.(avail_house, Ref(model))
+            avail_utility = exp_utility.(avail_house, Ref(model)) #Ref sets model as a scalar for broadcasting
             #Identify house w/ max utility in avail_house
             new_max, new_pos = findmax(avail_utility)
             
