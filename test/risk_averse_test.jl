@@ -4,9 +4,9 @@ include("../src/base_model.jl")
 include("../src/visual_attrs.jl")
 
 #Create models for comparison
-risk_abm_high = flood_ABM(Elevation; pop_growth = 0.05)
+risk_abm_high = flood_ABM(Elevation)
 ##Repeat for low risk aversion (ra = 0.7)
-risk_abm_low = flood_ABM(Elevation; risk_averse =  0.7, pop_growth = 0.05)
+risk_abm_low = flood_ABM(Elevation; risk_averse =  0.7)
 
 #Save agent & model data to collect
 adata = [(action, count, fam), (floodplain, count, fam)]
@@ -16,7 +16,7 @@ mdata = [floodepth, depth_damage]
 #run model to gather data (ra = 0.3; ra = 0.7)
 
 ##Try ensemble run
-adf, mdf = ensemblerun!([risk_abm_high risk_abm_low], agent_step!, model_step!, 50, agents_first = false; adata, mdata)
+adf, mdf = ensemblerun!([risk_abm_high risk_abm_low], dummystep, combine_step!, 50, agents_first = false; adata, mdata)
 #plot agents deciding to move
 agent_plot = Plots.plot(adf.step, adf.count_action_fam, group = adf.ensemble, label = ["high" "low"], 
 legendfontsize = 12, linecolor = [housecolor[6] housecolor[2]], lw = 5)
@@ -27,7 +27,7 @@ Plots.ylabel!("Moving Agents", pointsize = 24)
 fp_plot = Plots.plot(adf.step, adf.count_floodplain_fam, group = adf.ensemble, label = ["high" "low"], 
 legend = :bottomright,legendfontsize = 12, linecolor = [housecolor[7] housecolor[3]], lw = 5)
 Plots.ylabel!("Floodplain Pop.")
-Plots.ylims!(80,300)
+#Plots.ylims!(80,300)
 Plots.xlabel!("Year", pointsize = 24)
 #plot flood depths
 model_plot = Plots.plot(adf.step[1:51], risk_abm_high.Flood_depth[1:51], legend = false,
@@ -51,7 +51,7 @@ damage_results = Plots.plot(model_plot, damage_plot, layout = (2,1), dpi = 300, 
 
 ##Spatial Plots
 risk_abm_high = flood_ABM(Elevation)
-step!(risk_abm_high, agent_step!, model_step!,10, false)
+step!(risk_abm_high, agent_step!, model_step!,12, false)
 #Create Plot
 risk_fig, ax, abmobs = abmplot(risk_abm_high; plotkwargs...)
 #Change resolution of scene
@@ -69,8 +69,8 @@ Makie.save("test/Test_visuals/risk_fig.png", risk_fig)
 models_high = [flood_ABM(Elevation; seed = i) for i in 1000:2000]
 models_low = [flood_ABM(Elevation; risk_averse = 0.7, seed = i) for i in 1000:2000]
 ##Try ensemble run
-adf_high, _ = ensemblerun!(models_high, agent_step!, model_step!, 50, agents_first = false; adata)
-adf_low, _ = ensemblerun!(models_low, agent_step!, model_step!, 50, agents_first = false; adata)
+adf_high, _ = ensemblerun!(models_high, dummystep, combine_step!, 50, agents_first = false; adata)
+adf_low, _ = ensemblerun!(models_low, dummystep, combine_step!, 50, agents_first = false; adata)
 
 gdf_high = groupby(adf_high, :step)
 gdf_high_med = combine(gdf_high, [:count_action_fam :count_floodplain_fam] .=> median; renamecols=false)

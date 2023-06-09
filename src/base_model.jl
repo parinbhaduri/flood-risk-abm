@@ -31,9 +31,10 @@ function flood_ABM(Elevation; risk_averse = 0.3, levee = nothing,  #risk_averse:
     
 
     model = ABM(
-        Union{Family,House},
+        Union{House,Family},
         space,
-        scheduler = Schedulers.ByType(true, true, Union{Family,House});
+        scheduler = Schedulers.ByType((House, Family), false);
+        #scheduler = Schedulers.ByType(true, true, Union{House, Family});
         properties = properties,
         rng = MersenneTwister(seed),
         warn = false,
@@ -99,7 +100,6 @@ function agent_step!(agent::House, model::ABM)
     
 end
 
-
 #model step defines dynamic progression of simulation
 include("model_step.jl")
 
@@ -110,4 +110,15 @@ function model_step!(model::ABM)
     model.pop_growth > 0 && pop_change!(model)       
 end
 
+
+#One stepping function when agents need to be stepped in between model stepping functions
+function combine_step!(model::ABM)
+    model.tick += 1
+    flood_GEV!(model)
+    for id in Agents.schedule(test_model)
+        agent_step!(model[id], model)
+    end
+    test_relocate!(model)
+    model.pop_growth > 0 && pop_change!(model)
+end
 
