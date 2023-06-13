@@ -115,10 +115,10 @@ end
 function combine_step!(model::ABM)
     model.tick += 1
     flood_GEV!(model)
-    for id in Agents.schedule(test_model)
+    for id in Agents.schedule(model)
         agent_step!(model[id], model)
     end
-    test_relocate!(model)
+    relocate!(model)
     model.pop_growth > 0 && pop_change!(model)
 end
 
