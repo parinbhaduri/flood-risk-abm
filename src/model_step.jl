@@ -104,7 +104,7 @@ function relocate!(model::ABM)
     #Find available positions
     avail_house = [n for n in allagents(model) if n isa House && length(ids_in_position(n.pos, model)) < 2]
     #Calculate Utility across all avail_house
-    util_dict = Dict(house.pos => exp_utility(house, test_model) for house in avail_house)
+    util_dict = Dict(house.pos => exp_utility(house, model) for house in avail_house)
     #Create dictionary to link house with utilities
     #Find max utility and associated position
     for i in sorted_agent
@@ -127,7 +127,7 @@ function relocate!(model::ABM)
         i.utility = new_max
                     
         #move agent to better utility location
-        new_pos = rand(test_model.rng, [k for (k,v) in util_dict if v == new_max])
+        new_pos = rand(model.rng, [k for (k,v) in util_dict if v == new_max])
         move_agent!(i, new_pos, model)
 
         #Remove max house from avail_house
