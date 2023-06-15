@@ -4,9 +4,9 @@ include("../src/base_model.jl")
 include("../src/visual_attrs.jl")
 
 #Create models for comparison
-risk_abm_high = flood_ABM(Elevation)
+risk_abm_high = flood_ABM(Elevation; pop_growth = 0.005)
 ##Repeat for low risk aversion (ra = 0.7)
-risk_abm_low = flood_ABM(Elevation; risk_averse =  0.7)
+risk_abm_low = flood_ABM(Elevation; risk_averse =  0.7, pop_growth = 0.005)
 
 #Save agent & model data to collect
 adata = [(action, count, fam), (floodplain, count, fam)]
@@ -16,7 +16,7 @@ mdata = [floodepth, depth_damage]
 #run model to gather data (ra = 0.3; ra = 0.7)
 
 ##Try ensemble run
-adf, mdf = ensemblerun!([risk_abm_high risk_abm_low], dummystep, combine_step!, 50, agents_first = false; adata, mdata)
+adf, mdf = ensemblerun!([risk_abm_high risk_abm_low], dummystep, combine_step!, 50; adata, mdata)
 #plot agents deciding to move
 agent_plot = Plots.plot(adf.step, adf.count_action_fam, group = adf.ensemble, label = ["high" "low"], 
 legendfontsize = 12, linecolor = [housecolor[6] housecolor[2]], lw = 5)

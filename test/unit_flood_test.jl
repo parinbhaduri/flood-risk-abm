@@ -1,5 +1,7 @@
 #initialize model
 include("../src/base_model.jl")
+"""Looks at agent evolution without relocation. Testing to see if flood depth
+is properly read and recorded"""
 
 #Create alternative flooding function
 function flood_unit!(model::ABM)

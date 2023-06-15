@@ -127,7 +127,7 @@ function relocate!(model::ABM)
         i.utility = new_max
                     
         #move agent to better utility location
-        new_pos = rand(model.rng, [k for (k,v) in util_dict if v == new_max])
+        new_pos = [k for (k,v) in util_dict if v == new_max][1] #Just select the first house
         move_agent!(i, new_pos, model)
 
         #Remove max house from avail_house

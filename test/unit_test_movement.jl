@@ -13,9 +13,6 @@ function agent_prob_unit!(agent::Family, model::ABM)
     #Calculate logistic Probability
     year = model.tick
     mem = model.memory
-    time_back = year > mem ? range(year, year - (mem-1), step = -1) : range(year, 1, step = -1)
-    pos_ids = ids_in_position(agent, model) #First id is Family, second is House
-    calc_house = [id for id in pos_ids if model[id] isa House][1]
     #Calculate flood probability based on risk averse value
     #No of Flood events not included here 
     if model.risk_averse == 0
@@ -26,7 +23,7 @@ function agent_prob_unit!(agent::Family, model::ABM)
         flood_prob = 1/(1+ exp(-10((0/mem) - model.risk_averse)))
     end
     #Input probability into Binomial Distribution 
-    if flood_prob < 1
+    if flood_prob <= 1
     #outcome = rand(model.rng, 1)
         outcome = rand(model.rng, Binomial(1,flood_prob))
     #Save Binomial result as Agent property
@@ -94,6 +91,46 @@ function relocation_noflood!(model::ABM)
     end
 end
 
+function relocate_noflood!(model::ABM)
+    "uses a dictionary to store house positions and utility values"
+    #Filter Family agents by action = true
+    sorted_agent = sort([a for a in allagents(model) if a isa Family && a.action == true], by = x -> x.income, rev = true)
+    #Find available positions
+    avail_house = [n for n in allagents(model) if n isa House && length(ids_in_position(n.pos, model)) < 2]
+    #Calculate Utility across all avail_house
+    util_dict = Dict(house.pos => exp_utility_unit(house) for house in avail_house)
+    #Create dictionary to link house with utilities
+    #Find max utility and associated position
+    for i in sorted_agent
+        #Ensure there are available houses
+        if length(avail_house) == 0
+            break
+        end
+        
+        pos_ids = ids_in_position(i, model)
+        sort_house = [id for id in pos_ids if model[id] isa House][1]
+        #Calculate agent utility at its current location
+        agent_utility = exp_utility_unit(model[sort_house])
+        
+        #Identify house w/ max utility in avail_house
+        new_max = maximum(values(util_dict))
+     
+        #If agent's current utility is larger than max available, skip iteration
+        agent_utility > new_max && continue
+        #Update agent utility
+        i.utility = new_max
+                    
+        #move agent to better utility location
+        new_pos = [k for (k,v) in util_dict if v == new_max][1]
+        move_agent!(i, new_pos, model)
+
+        #Remove max house from avail_house
+        delete!(util_dict, new_pos)
+        #Add agent's previous house to avail_house vector
+        util_dict[model[sort_house].pos] = agent_utility
+    end
+end
+
 ##Update model step
 function model_step_noflood!(model::ABM)
     model.tick += 1
@@ -102,26 +139,26 @@ function model_step_noflood!(model::ABM)
     model.pop_growth > 0 && pop_change!(model)
 end
 
-#Initialize model
-unit_model = flood_ABM(Elevation)
+function combine_step_noflood!(model::ABM)
+    model.tick += 1
+    flood_GEV!(model)
+    for id in Agents.schedule(model)
+        agent_step_unit!(model[id], model)
+    end
+    relocate_noflood!(model)
+    model.pop_growth > 0 && pop_change!(model)
+end
 
-step!(unit_model, agent_step_unit!, model_step_noflood!, 15)
 
-unit_fig, ax, abmobs = abmplot(unit_model, enable_inspection = true ; plotkwargs...)
-
-display(unit_fig)
-
-
-adata = [(action, count, fam), (floodplain, count, fam)]
-#mdata = [:Flood_depth]
 
 ###run model to gather data (ra = 0.3; ra = 0.7)
 
 ##Create models
-unit_model_high = flood_ABM(Elevation; pop_growth = 0.005)
-unit_model_low = flood_ABM(Elevation; risk_averse =  0.7, pop_growth = 0.005)
+unit_model_high = flood_ABM(Elevation)#; pop_growth = 0.005)
+unit_model_low = flood_ABM(Elevation; risk_averse =  0.7)#, pop_growth = 0.005)
 ##Try ensemble run
-adf, _ = ensemblerun!([unit_model_high unit_model_low], agent_step_unit!, model_step_noflood!, 50, agents_first = false; adata)
+adf, _ = ensemblerun!([unit_model_high unit_model_low], dummystep, combine_step_noflood!, 50; adata)
+
 #plot agents deciding to move
 agent_plot = Plots.plot(adf.step, adf.count_action_fam, group = adf.ensemble, label = ["high" "low"], 
 legendfontsize = 12, linecolor = [housecolor[6] housecolor[2]], lw = 5)
@@ -147,3 +184,17 @@ Plots.ylabel!("Flood Depth", pointsize = 24)
 #create subplot
 averse_results = Plots.plot(model_plot, agent_plot, fp_plot, layout = (3,1), dpi = 300, size = (500,600))
 
+
+#Visualize model
+unit_model = flood_ABM(Elevation)
+
+#step!(unit_model, agent_step_unit!, model_step_noflood!, 15)
+
+unit_fig, ax, abmobs = abmplot(unit_model; agent_step! = dummystep, model_step! = combine_step!,
+enable_inspection = true, figure = (resolution = (1450,1450),), plotkwargs...)
+
+display(unit_fig)
+
+
+adata = [(action, count, fam), (floodplain, count, fam)]
+#mdata = [:Flood_depth]

@@ -36,6 +36,10 @@ fam(agent) = agent isa Family
 f_depth = GEV_return(1/100)
 floodplain(agent) = agent.pos in Tuple.(findall(<(f_depth), Elevation))
 
+#Save agent & model data to collect
+adata = [(action, count, fam), (floodplain, count, fam)]
+mdata = [floodepth, depth_damage]
+
 #calculate relative damage in floodplain
 function depth_damage(model::ABM)
     #Obtain Family agents located in floodplain
