@@ -13,6 +13,8 @@ function agent_prob_unit!(agent::Family, model::ABM)
     #Calculate logistic Probability
     year = model.tick
     mem = model.memory
+    #flood_prob = 0.01
+    #"""
     #Calculate flood probability based on risk averse value
     #No of Flood events not included here 
     if model.risk_averse == 0
@@ -22,6 +24,7 @@ function agent_prob_unit!(agent::Family, model::ABM)
     else
         flood_prob = 1/(1+ exp(-10((0/mem) - model.risk_averse)))
     end
+    #"""
     #Input probability into Binomial Distribution 
     if flood_prob <= 1
     #outcome = rand(model.rng, 1)
@@ -154,7 +157,7 @@ end
 ###run model to gather data (ra = 0.3; ra = 0.7)
 
 ##Create models
-unit_model_high = flood_ABM(Elevation)#; pop_growth = 0.005)
+unit_model_high = flood_ABM(Elevation; risk_averse =  0.5)#; pop_growth = 0.005)
 unit_model_low = flood_ABM(Elevation; risk_averse =  0.7)#, pop_growth = 0.005)
 ##Try ensemble run
 adf, _ = ensemblerun!([unit_model_high unit_model_low], dummystep, combine_step_noflood!, 50; adata)
@@ -162,7 +165,7 @@ adf, _ = ensemblerun!([unit_model_high unit_model_low], dummystep, combine_step_
 #plot agents deciding to move
 agent_plot = Plots.plot(adf.step, adf.count_action_fam, group = adf.ensemble, label = ["high" "low"], 
 legendfontsize = 12, linecolor = [housecolor[6] housecolor[2]], lw = 5)
-#Plots.ylims!(0,80)
+Plots.ylims!(0,50)
 Plots.ylabel!("Moving Agents", pointsize = 24)
 
 #plot agents in the floodplain
