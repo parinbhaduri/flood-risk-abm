@@ -27,7 +27,7 @@ scatterkwargs = (strokewidth = 1.0,)
 )
 
 """ Code for data collection during model runs"""
-#collect data for model
+### collect data for model
 
 action(agent) = agent.action == true
 #filter out houses
@@ -35,10 +35,6 @@ fam(agent) = agent isa Family
 #count Families in floodplain
 f_depth = GEV_return(1/100)
 floodplain(agent) = agent.pos in Tuple.(findall(<(f_depth), Elevation))
-
-#Save agent & model data to collect
-adata = [(action, count, fam), (floodplain, count, fam)]
-mdata = [floodepth, depth_damage]
 
 #calculate relative damage in floodplain
 function depth_damage(model::ABM)
@@ -65,3 +61,8 @@ function floodepth(model::ABM)
         return GEV_rp(model.Flood_depth[model.tick])
     end
 end
+
+
+## Save agent & model data to collect
+adata = [(action, count, fam), (floodplain, count, fam)]
+mdata = [floodepth, depth_damage]
