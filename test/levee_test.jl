@@ -3,9 +3,9 @@ include("../src/base_model.jl")
 #Define plot attributes
 include("../src/visual_attrs.jl")
 
-risk_abm_100_high = flood_ABM(Elevation; levee = 1/100, breach = true)#, pop_growth = 0.01)
+risk_abm_100_high = flood_ABM(;Elev = Elevation, levee = 1/100, breach = true)#, pop_growth = 0.01)
 #low risk aversion
-risk_abm_100_low = flood_ABM(Elevation; risk_averse = 0.7, levee = 1/100, breach = true)#, pop_growth = 0.01)
+risk_abm_100_low = flood_ABM(;Elev = Elevation, risk_averse = 0.7, levee = 1/100, breach = true)#, pop_growth = 0.01)
 
 #risk_exp_fig, ax, abmobs = abmexploration(risk_abm;
 #agent_step!, model_step!, params, plotkwargs..., adata, alabels = ["Action"], mdata, mlabels = ["Flood Depth"])
@@ -121,11 +121,10 @@ params = Dict(
     :pop_growth => 0,
     :seed => collect(range(1000,2000)), 
 )
-##create models
+##Evolve models over different parameter combinations
 adf, mdf = paramscan(params, flood_ABM; showprogress = true, adata, mdata, agent_step! = dummystep, model_step! = combine_step!, n = 50)
 adf_show = filter(:seed => isequal(1897), adf)
 mdf_show = filter(:seed => isequal(1897), mdf)
-##evolve models
 
 ##Plot
 
@@ -134,7 +133,7 @@ agent_plot = Plots.plot(adf.step, adf.count_action_fam, label = false, linecolor
 
 Plots.plot!(adf_show.step, adf_show.count_action_fam, group = adf_show.risk_averse, label = ["high" "low"], 
 legendfontsize = 12, linecolor = [housecolor[6] housecolor[2]], lw = 3)
-#Plots.ylims!(0,80)
+Plots.ylims!(0,120)
 Plots.ylabel!("Moving Agents", pointsize = 24)
 
 #plot agents in the floodplain
@@ -159,4 +158,4 @@ Plots.ylabel!("Flood Depth", pointsize = 24)
 #create subplot
 levee_real = Plots.plot(model_plot, agent_plot, fp_plot, layout = (3,1), dpi = 300, size = (500,600))
 
-savefig(averse_real, "test/Test_visuals/levee_realizations.png")
+savefig(levee_real, "test/Test_visuals/levee_realizations.png")

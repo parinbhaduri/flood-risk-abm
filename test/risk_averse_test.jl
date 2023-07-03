@@ -16,7 +16,7 @@ adf, mdf = ensemblerun!([risk_abm_high risk_abm_low], dummystep, combine_step!, 
 #plot agents deciding to move
 agent_plot = Plots.plot(adf.step, adf.count_action_fam, group = adf.ensemble, label = ["high" "low"], 
 legendfontsize = 12, linecolor = [housecolor[6] housecolor[2]], lw = 5)
-#Plots.ylims!(0,80)
+Plots.ylims!(0,120)
 Plots.ylabel!("Moving Agents", pointsize = 24)
 
 #plot agents in the floodplain
@@ -136,7 +136,7 @@ agent_plot = Plots.plot(adf.step, adf.count_action_fam, label = false, linecolor
 
 Plots.plot!(adf_show.step, adf_show.count_action_fam, group = adf_show.risk_averse, label = ["high" "low"], 
 legendfontsize = 12, linecolor = [housecolor[6] housecolor[2]], lw = 3)
-#Plots.ylims!(0,80)
+Plots.ylims!(0,120)
 Plots.ylabel!("Moving Agents", pointsize = 24)
 
 #plot agents in the floodplain
