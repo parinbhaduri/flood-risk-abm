@@ -58,11 +58,13 @@ function floodepth(model::ABM)
     if model.tick == 0
         return 0.0
     else
-        return GEV_rp(model.Flood_depth[model.tick])
+        return model.Flood_depth[model.tick]
     end
 end
 
-
+function model_seed(model::ABM)
+    return model.rng.seed[1] % Int
+end
 ## Save agent & model data to collect
 adata = [(action, count, fam), (floodplain, count, fam)]
-mdata = [floodepth, depth_damage]
+mdata = [floodepth]

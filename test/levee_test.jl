@@ -3,12 +3,9 @@ include("../src/base_model.jl")
 #Define plot attributes
 include("../src/visual_attrs.jl")
 
-risk_abm_100_high = flood_ABM(Elevation; levee = 1/100, breach = true, pop_growth = 0.01)
+risk_abm_100_high = flood_ABM(Elevation; levee = 1/100, breach = true)#, pop_growth = 0.01)
 #low risk aversion
-risk_abm_100_low = flood_ABM(Elevation; risk_averse = 0.7, levee = 1/100, breach = true, pop_growth = 0.01)
-
-adata = [(action, count, fam), (floodplain, count, fam)]
-#mdata = [:Flood_depth]
+risk_abm_100_low = flood_ABM(Elevation; risk_averse = 0.7, levee = 1/100, breach = true)#, pop_growth = 0.01)
 
 #risk_exp_fig, ax, abmobs = abmexploration(risk_abm;
 #agent_step!, model_step!, params, plotkwargs..., adata, alabels = ["Action"], mdata, mlabels = ["Flood Depth"])
@@ -21,14 +18,14 @@ adf_100, _ = ensemblerun!([risk_abm_100_high risk_abm_100_low], dummystep, combi
 #plot agents deciding to move
 agent_plot_100 = Plots.plot(adf_100.step, adf_100.count_action_fam, group = adf_100.ensemble, label = ["high" "low"], 
 legendfontsize = 12, linecolor = [housecolor[6] housecolor[2]], lw = 5)
-#Plots.ylims!(0,80)
+Plots.ylims!(0,80)
 Plots.ylabel!("Moving Agents", pointsize = 24)
 
 #plot agents in the floodplain
 fp_plot_100 = Plots.plot(adf_100.step, adf_100.count_floodplain_fam, group = adf_100.ensemble, label = ["high" "low"], 
 legend = :bottomright, legendfontsize = 12, linecolor = [housecolor[7] housecolor[3]], lw = 5)
 Plots.ylabel!("Floodplain Pop.")
-#Plots.ylims!(80,240)
+Plots.ylims!(0,240)
 Plots.xlabel!("Year", pointsize = 24)
 
 #plot flood depths
@@ -99,8 +96,8 @@ Plots.ylims!(0,250)
 Plots.xlabel!("Year", pointsize = 24)
 
 #plot flood depths
-model_plot_100 = Plots.plot(adf_high_100.step[1:51], [model.Flood_depth[1:51] for model in models_high_100], legend = false,
- linecolor = housecolor[10], lw = 3)
+model_plot_100 = Plots.plot(adf_high_100.step[1:51], models_high_100[1].Flood_depth[1:51], legend = false,
+ linecolor = housecolor[10], lw = 5)
  #Add line showing 100- yr level 
 flood_100 = [GEV_return(1/100) for _ in 1:51]
 Plots.plot!(adf_high_100.step[1:51],flood_100, line = :dash, linecolor = RGB(213/255,111/255,62/255), lw = 3)
@@ -112,3 +109,54 @@ Plots.ylabel!("Flood Depth", pointsize = 24)
 levee_ensemble_results = Plots.plot(model_plot_100, agent_plot_100, fp_plot_100, layout = (3,1), dpi = 300,size = (500,600))
 
 savefig(levee_ensemble_results, "test/Test_visuals/levee_ensemble_breach.png")
+
+
+### Create plot showing all flood records and all model revolutions
+params = Dict(
+    :Elev => Elevation,
+    :risk_averse => [0.3, 0.7],
+    :levee => 1/100,
+    :breach => true,
+    :N => 600, 
+    :pop_growth => 0,
+    :seed => collect(range(1000,2000)), 
+)
+##create models
+adf, mdf = paramscan(params, flood_ABM; showprogress = true, adata, mdata, agent_step! = dummystep, model_step! = combine_step!, n = 50)
+adf_show = filter(:seed => isequal(1897), adf)
+mdf_show = filter(:seed => isequal(1897), mdf)
+##evolve models
+
+##Plot
+
+#plot agents deciding to move
+agent_plot = Plots.plot(adf.step, adf.count_action_fam, label = false, linecolor = :gray, alpha = 0.5, lw = 1)
+
+Plots.plot!(adf_show.step, adf_show.count_action_fam, group = adf_show.risk_averse, label = ["high" "low"], 
+legendfontsize = 12, linecolor = [housecolor[6] housecolor[2]], lw = 3)
+#Plots.ylims!(0,80)
+Plots.ylabel!("Moving Agents", pointsize = 24)
+
+#plot agents in the floodplain
+fp_plot = Plots.plot(adf.step, adf.count_floodplain_fam, label = false, linecolor = :gray, alpha = 0.5, lw = 1)
+Plots.plot!(adf_show.step, adf_show.count_floodplain_fam, group = adf_show.risk_averse, label = ["high" "low"], 
+legend = :topright, legendfontsize = 12, linecolor = [housecolor[7] housecolor[3]], lw = 3)
+Plots.ylabel!("Floodplain Pop.")
+Plots.ylims!(0,250)
+Plots.xlabel!("Year", pointsize = 24)
+
+#plot flood depths
+model_plot = Plots.plot(mdf.step[1:51051], mdf.floodepth[1:51051], legend = false, linecolor = :gray, alpha = 0.5, lw = 1)
+Plots.plot!(mdf_show.step[1:51], mdf_show.floodepth[1:51], legend = false,
+ linecolor = housecolor[10], lw = 3)
+#Add line showing 100- yr level 
+flood_100 = [GEV_return(1/100) for _ in 1:51]
+Plots.plot!(mdf_show.step[1:51],flood_100, line = :dash, linecolor = RGB(213/255,111/255,62/255), lw = 3)
+annotate!(32,14,Plots.text("100-year level", family="serif", pointsize = 18, color = RGB(213/255,111/255,62/255)))
+Plots.ylims!(0,40)
+Plots.ylabel!("Flood Depth", pointsize = 24)
+
+#create subplot
+levee_real = Plots.plot(model_plot, agent_plot, fp_plot, layout = (3,1), dpi = 300, size = (500,600))
+
+savefig(averse_real, "test/Test_visuals/levee_realizations.png")

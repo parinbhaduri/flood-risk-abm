@@ -16,17 +16,20 @@ include("agent_step.jl")
 
 
 #Initialize model 
-function flood_ABM(Elevation; risk_averse = 0.3, levee = nothing,  #risk_averse: Decimal between 0 and 1
-    flood_depth = copy(flood_record),
+function flood_ABM(;Elev = Elevation, risk_averse = 0.3, levee = nothing,  #risk_averse: Decimal between 0 and 1
+    #flood_depth = copy(flood_record),
     breach = false, #Determine if Levee breaching is included in model
     N = 600, #Number of family agents to create 
-    griddims = size(Elevation),  #Dim of grid
     pop_growth = 0, #Population growth at each timestep. Recorded as decimal bw 0 and 1
     seed = 1897,
 )
+    griddims = size(Elev)  #Dim of grid
     space = GridSpace(griddims)
+
+    flood_rng = MersenneTwister(seed)
+    flood_depth = [GEV_event(flood_rng) for _ in 1:100]
     
-    properties = Dict(:Elevation => Elevation, :levee => levee, :breach => breach, :Flood_depth => flood_depth, :risk_averse => risk_averse,
+    properties = Dict(:Elevation => Elev, :levee => levee, :breach => breach, :Flood_depth => flood_depth, :risk_averse => risk_averse,
      :memory => 10, :pop_growth => pop_growth, :tick => 0)
     
 
