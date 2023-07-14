@@ -116,7 +116,7 @@ savefig(averse_ensemble_results, "test/Test_visuals/averse_ensemble.png")
 ### Create plot showing all flood records and all model revolutions
 params = Dict(
     :Elev => Elevation,
-    :risk_averse => [0.3, 0.7],
+    :risk_averse => [0.4, 0.7],
     :levee => nothing,
     :breach => false,
     :N => 600, 
@@ -132,15 +132,15 @@ mdf_show = filter(:seed => isequal(1897), mdf)
 ##Plot
 
 #plot agents deciding to move
-agent_plot = Plots.plot(adf.step, adf.count_action_fam, label = false, linecolor = :gray, alpha = 0.5, lw = 1)
+agent_plot = Plots.plot(adf.step, adf.count_action_fam, group = adf.risk_averse, label = false, linecolor = [housecolor[7] housecolor[3]], alpha = 0.35, lw = 1)
 
 Plots.plot!(adf_show.step, adf_show.count_action_fam, group = adf_show.risk_averse, label = ["high" "low"], 
-legendfontsize = 12, linecolor = [housecolor[6] housecolor[2]], lw = 3)
+legend = :topright, legendfontsize = 12, linecolor = [housecolor[7] housecolor[3]], lw = 3)
 #Plots.ylims!(0,80)
 Plots.ylabel!("Moving Agents", pointsize = 24)
 
 #plot agents in the floodplain
-fp_plot = Plots.plot(adf.step, adf.count_floodplain_fam, label = false, linecolor = :gray, alpha = 0.5, lw = 1)
+fp_plot = Plots.plot(adf.step, adf.count_floodplain_fam, group = adf.risk_averse, label = false, linecolor = [housecolor[7] housecolor[3]], alpha = 0.35, lw = 1)
 Plots.plot!(adf_show.step, adf_show.count_floodplain_fam, group = adf_show.risk_averse, label = ["high" "low"], 
 legend = :topright, legendfontsize = 12, linecolor = [housecolor[7] housecolor[3]], lw = 3)
 Plots.ylabel!("Floodplain Pop.")
@@ -149,8 +149,7 @@ Plots.xlabel!("Year", pointsize = 24)
 
 #plot flood depths
 model_plot = Plots.plot(mdf.step[1:51051], mdf.floodepth[1:51051], legend = false, linecolor = :gray, alpha = 0.5, lw = 1)
-Plots.plot!(mdf_show.step[1:51], mdf_show.floodepth[1:51], legend = false,
- linecolor = housecolor[10], lw = 3)
+Plots.plot!(mdf_show.step[1:51], mdf_show.floodepth[1:51], legend = false, linecolor = housecolor[10], lw = 3)
 #Add line showing 100- yr level 
 flood_100 = [GEV_return(1/100) for _ in 1:51]
 Plots.plot!(mdf_show.step[1:51],flood_100, line = :dash, linecolor = RGB(213/255,111/255,62/255), lw = 3)

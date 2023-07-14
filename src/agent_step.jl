@@ -16,7 +16,7 @@ function agent_prob!(agent::Family, model::ABM)
     calc_house = [id for id in pos_ids if model[id] isa House][1]
     #Calculate flood probability based on risk averse value
     if model[calc_house].flood_mem == 0
-        flood_prob = 0.01
+        flood_prob = 0.025
     elseif model.risk_averse == 0
         #flood_prob = 1/(1+ exp(-20((sum(model[calc_house].flood[time_back])/mem) - 0.1)))
         flood_prob = 1/(1+ exp(-20((model[calc_house].flood_mem/mem) - 0.1)))

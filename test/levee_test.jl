@@ -114,7 +114,7 @@ savefig(levee_ensemble_results, "test/Test_visuals/levee_ensemble_breach.png")
 ### Create plot showing all flood records and all model revolutions
 params = Dict(
     :Elev => Elevation,
-    :risk_averse => [0.3, 0.7],
+    :risk_averse => [0.4, 0.7],
     :levee => 1/100,
     :breach => true,
     :N => 600, 
@@ -130,7 +130,7 @@ mdf_show = filter(:seed => isequal(1897), mdf)
 ##Plot
 
 #plot agents deciding to move
-agent_plot = Plots.plot(adf.step, adf.count_action_fam, label = false, linecolor = :gray, alpha = 0.5, lw = 1)
+agent_plot = Plots.plot(adf.step, adf.count_action_fam, group = adf.risk_averse, label = false, linecolor = [housecolor[7] housecolor[3]], alpha = 0.35, lw = 1)
 
 Plots.plot!(adf_show.step, adf_show.count_action_fam, group = adf_show.risk_averse, label = ["high" "low"], 
 legendfontsize = 12, linecolor = [housecolor[6] housecolor[2]], lw = 3)
@@ -138,7 +138,7 @@ legendfontsize = 12, linecolor = [housecolor[6] housecolor[2]], lw = 3)
 Plots.ylabel!("Moving Agents", pointsize = 24)
 
 #plot agents in the floodplain
-fp_plot = Plots.plot(adf.step, adf.count_floodplain_fam, label = false, linecolor = :gray, alpha = 0.5, lw = 1)
+fp_plot = Plots.plot(adf.step, adf.count_floodplain_fam, group = adf.risk_averse, label = false, linecolor = [housecolor[7] housecolor[3]], alpha = 0.35, lw = 1)
 Plots.plot!(adf_show.step, adf_show.count_floodplain_fam, group = adf_show.risk_averse, label = ["high" "low"], 
 legend = :topright, legendfontsize = 12, linecolor = [housecolor[7] housecolor[3]], lw = 3)
 Plots.ylabel!("Floodplain Pop.")
