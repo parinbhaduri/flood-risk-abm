@@ -4,9 +4,9 @@ include("../src/base_model.jl")
 include("../src/visual_attrs.jl")
 
 #Create models for comparison
-risk_abm_high = flood_ABM()#; pop_growth = 0.005)
+risk_abm_high = flood_ABM(; N = 1200)#, pop_growth = 0.01)
 ##Repeat for low risk aversion (ra = 0.7)
-risk_abm_low = flood_ABM(; risk_averse =  0.7)#, pop_growth = 0.005)
+risk_abm_low = flood_ABM(; risk_averse =  0.7, N = 1200)#, pop_growth = 0.01)
 
 
 #run model to gather data (ra = 0.3; ra = 0.7)
@@ -23,7 +23,7 @@ Plots.ylabel!("Moving Agents", pointsize = 24)
 fp_plot = Plots.plot(adf.step, adf.count_floodplain_fam, group = adf.ensemble, label = ["high" "low"], 
 legend = :bottomright,legendfontsize = 12, linecolor = [housecolor[7] housecolor[3]], lw = 5)
 Plots.ylabel!("Floodplain Pop.")
-Plots.ylims!(0,240)
+#Plots.ylims!(0,240)
 Plots.xlabel!("Year", pointsize = 24)
 #plot flood depths
 model_plot = Plots.plot(adf.step[1:51], risk_abm_high.Flood_depth[1:51], legend = false,
@@ -37,6 +37,7 @@ Plots.ylabel!("Flood Depth", pointsize = 24)
 
 #create subplot
 averse_results = Plots.plot(model_plot, agent_plot, fp_plot, layout = (3,1), dpi = 300, size = (500,600))
+Plots.title!("Base Move Probability: 2.5%; N = 1200 w/ 1% growth")
 
 
 savefig(averse_results, "test/Test_visuals/averse_results.png")
@@ -116,10 +117,10 @@ savefig(averse_ensemble_results, "test/Test_visuals/averse_ensemble.png")
 ### Create plot showing all flood records and all model revolutions
 params = Dict(
     :Elev => Elevation,
-    :risk_averse => [0.4, 0.7],
+    :risk_averse => [0.3, 0.7],
     :levee => nothing,
     :breach => false,
-    :N => 600, 
+    :N => 1200, 
     :pop_growth => 0,
     :seed => collect(range(1000,2000)), 
 )
@@ -135,16 +136,16 @@ mdf_show = filter(:seed => isequal(1897), mdf)
 agent_plot = Plots.plot(adf.step, adf.count_action_fam, group = adf.risk_averse, label = false, linecolor = [housecolor[7] housecolor[3]], alpha = 0.35, lw = 1)
 
 Plots.plot!(adf_show.step, adf_show.count_action_fam, group = adf_show.risk_averse, label = ["high" "low"], 
-legend = :topright, legendfontsize = 12, linecolor = [housecolor[7] housecolor[3]], lw = 3)
-#Plots.ylims!(0,80)
+legend = :topright, legendfontsize = 12, linecolor = [housecolor[6] housecolor[2]], lw = 3)
+#Plots.ylims!(0,300)
 Plots.ylabel!("Moving Agents", pointsize = 24)
 
 #plot agents in the floodplain
 fp_plot = Plots.plot(adf.step, adf.count_floodplain_fam, group = adf.risk_averse, label = false, linecolor = [housecolor[7] housecolor[3]], alpha = 0.35, lw = 1)
 Plots.plot!(adf_show.step, adf_show.count_floodplain_fam, group = adf_show.risk_averse, label = ["high" "low"], 
-legend = :topright, legendfontsize = 12, linecolor = [housecolor[7] housecolor[3]], lw = 3)
+legend = :bottomright, legendfontsize = 12, linecolor = [housecolor[6] housecolor[2]], lw = 3)
 Plots.ylabel!("Floodplain Pop.")
-Plots.ylims!(0,250)
+#Plots.ylims!(0,500)
 Plots.xlabel!("Year", pointsize = 24)
 
 #plot flood depths

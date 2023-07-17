@@ -7,6 +7,7 @@ x = range(0,1, length = 100)
 y = [1/(1+ exp(-10(i - 0.5))) for i in x]
 y0 = [1/(1+ exp(-20(i - 0.1))) for i in x]
 y1 = [1/(1+ exp(-10(i - 0.3))) for i in x]
+y1_scale = [1/(1+ exp(-(i - 0.3)/(0.1-0.03))) for i in x]
 y2 = [1/(1+ exp(-10(i - 0.7))) for i in x]
 y3 = [0 for i in x]
 log_fig = Plots.plot(x,[y1 y y2], label = ["High RA" "Medium RA" "Low RA"], lw = 3,
@@ -14,6 +15,11 @@ log_fig = Plots.plot(x,[y1 y y2], label = ["High RA" "Medium RA" "Low RA"], lw =
 Plots.xlabel!("Flood Events per Decade")
 Plots.ylabel!("Action Probability")
 savefig(log_fig, "src/Parameter_visual/log_func.png")
+
+log_scale_fig = Plots.plot(x,[y1 y1_scale], label = ["High RA" "High RA w/ Fixed Effect"], lw = 3,
+ legend = :outertopright)
+Plots.xlabel!("Flood Events per Decade")
+Plots.ylabel!("Action Probability")
 
 ###Create heatmap for Flood level GEV_return
 figure = (; resolution=(600, 400), dpi = 300, font="CMU Serif")
