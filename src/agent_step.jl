@@ -11,29 +11,37 @@ function agent_prob!(agent::Family, model::ABM)
     #Calculate logistic Probability
     year = model.tick
     mem = model.memory
-    #time_back = year > mem ? range(year, year - (mem-1), step = -1) : range(year, 1, step = -1)
+    
     pos_ids = ids_in_position(agent, model) #First id is Family, second is House
     calc_house = [id for id in pos_ids if model[id] isa House][1]
+    #Define baseline probability of movement
+    base_prob = 0.025
+    ##Fixed effect: define scanling factor depending on levee presence
+    if isequal(model.levee, nothing)
+        scale_factor = 0.1
+    else
+        scale_factor = 0.1 - 0.03
+    end
     #Calculate flood probability based on risk averse value
     if model[calc_house].flood_mem == 0
-        flood_prob = 0.025
+        flood_prob = base_prob
     elseif model.risk_averse == 0
         #flood_prob = 1/(1+ exp(-20((sum(model[calc_house].flood[time_back])/mem) - 0.1)))
-        flood_prob = 1/(1+ exp(-20((model[calc_house].flood_mem/mem) - 0.1)))
+        flood_prob = 1/(1+ exp(-20((model[calc_house].flood_mem/mem) - 0.1)))  + base_prob
     elseif model.risk_averse == 1
         flood_prob = 0
     else
         #flood_prob = 1/(1+ exp(-10((sum(model[calc_house].flood[time_back])/mem) - model.risk_averse)))
-        flood_prob = 1/(1+ exp(-10((model[calc_house].flood_mem/mem) - model.risk_averse)))
+        flood_prob = 1/(1+ exp(-((model[calc_house].flood_mem/mem) - model.risk_averse)/scale_factor)) + base_prob
     end
     #Input probability into Binomial Distribution 
-    if flood_prob <= 1
+    flood_prob = flood_prob <= 1 ? flood_prob : 1
     #outcome = rand(model.rng, 1)
-        outcome = rand(model.rng, Binomial(1,flood_prob))
+    outcome = rand(model.rng, Binomial(1,flood_prob))
     #Save Binomial result as Agent property
-        action = outcome == 1 ? true : false
-        agent.action = action
-    end
+    action = outcome == 1 ? true : false
+    agent.action = action
+    
 end
 
 ## Create Function for Family agent to calculate utility
