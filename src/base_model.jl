@@ -14,13 +14,25 @@ include("../data/GEV.jl")
 include("agent_types.jl")
 include("agent_step.jl")
 
+#Create struct to hold model properties
+mutable struct Properties{Elev<:Matrix{Float64}, levee<:Float64, breach<:Bool, flood_depth<:Vector{Float64}, risk_averse<:Float64, mem<:Int, pop_growth<:Float64, tick<:Int}
+    Elevation::Elev
+    levee::levee
+    breach::breach 
+    Flood_depth::flood_depth
+    risk_averse::risk_averse
+    memory::mem 
+    pop_growth::pop_growth
+    tick::tick
+end
 
 #Initialize model 
 function flood_ABM(;Elev = Elevation, risk_averse = 0.3, levee = nothing,  #risk_averse: Decimal between 0 and 1
     #flood_depth = copy(flood_record),
     breach = false, #Determine if Levee breaching is included in model
-    N = 600, #Number of family agents to create 
-    pop_growth = 0, #Population growth at each timestep. Recorded as decimal bw 0 and 1
+    N = 1200, #Number of family agents to create 
+    pop_growth = 0.0, #Population growth at each timestep. Recorded as decimal bw 0 and 1
+    mem = 10, #Flood memory (must be integer)
     seed = 1897,
 )
     griddims = size(Elev)  #Dim of grid
@@ -28,9 +40,12 @@ function flood_ABM(;Elev = Elevation, risk_averse = 0.3, levee = nothing,  #risk
 
     flood_rng = MersenneTwister(seed)
     flood_depth = [GEV_event(flood_rng) for _ in 1:100]
+   
     
-    properties = Dict(:Elevation => Elev, :levee => levee, :breach => breach, :Flood_depth => flood_depth, :risk_averse => risk_averse,
-     :memory => 10, :pop_growth => pop_growth, :tick => 0)
+    
+    #properties = Dict(:Elevation => Elev, :levee => levee, :breach => breach, :Flood_depth => flood_depth, :risk_averse => risk_averse,
+    # :memory => 10, :pop_growth => pop_growth, :tick => 0)
+    parameters = Properties(Elev, levee, breach, flood_depth, risk_averse, mem, pop_growth, 0)
     
 
     model = ABM(
@@ -38,7 +53,7 @@ function flood_ABM(;Elev = Elevation, risk_averse = 0.3, levee = nothing,  #risk
         space,
         scheduler = Schedulers.ByType((House, Family), false);
         #scheduler = Schedulers.ByType(true, true, Union{House, Family});
-        properties = properties,
+        properties = parameters,
         rng = MersenneTwister(seed),
         warn = false,
     )
@@ -122,6 +137,9 @@ function combine_step!(model::ABM)
         agent_step!(model[id], model)
     end
     relocate!(model)
-    model.pop_growth > 0 && pop_change!(model)
+    #increase pop every 5 years
+    if model.pop_growth > 0
+        model.tick % 5 == 0 && pop_change!(model)
+    end
 end
 

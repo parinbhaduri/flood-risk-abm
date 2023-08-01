@@ -8,7 +8,7 @@ tmr = TimerOutput()
 com_tmr = TimerOutput()
 
 #Benchmark step functions
-test_model = flood_ABM(Elevation; levee = 1/100, breach = true)
+test_model = flood_ABM(;Elev = Elevation, levee = 1/100, breach = true)
 
 #Model
 function time_model_step!(model::ABM)
@@ -46,4 +46,4 @@ show(com_tmr)
 reset_timer!(com_tmr)
 
 #Becnhmark entire step function
-@benchmark step!(test_model, $dummystep, $time_combine_step!, 50, false) setup=(test_model = flood_ABM(Elevation)) evals=1
+@benchmark step!(test_model, $dummystep, $time_combine_step!, 50, false) setup=(test_model = flood_ABM(;Elev = Elevation, levee = 1/100, breach = true)) evals=1
