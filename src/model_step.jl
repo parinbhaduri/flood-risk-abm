@@ -41,7 +41,7 @@ end
 
 #Calculate flood depth and update model property
 function flood_GEV!(model::ABM)
-    if model.levee != nothing
+    if model.levee > 0
         year = model.tick
         levee_height = GEV_return(model.levee)
         flood_levee = model.Flood_depth[year] - levee_height

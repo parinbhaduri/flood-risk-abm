@@ -27,7 +27,7 @@ mutable struct Properties{Elev<:Matrix{Float64}, levee<:Float64, breach<:Bool, f
 end
 
 #Initialize model 
-function flood_ABM(;Elev = Elevation, risk_averse = 0.3, levee = nothing,  #risk_averse: Decimal between 0 and 1
+function flood_ABM(;Elev = Elevation, risk_averse = 0.3, levee = 0.0,  #risk_averse: Decimal between 0 and 1
     #flood_depth = copy(flood_record),
     breach = false, #Determine if Levee breaching is included in model
     N = 1200, #Number of family agents to create 
