@@ -3,9 +3,9 @@ include("../src/base_model.jl")
 #Define plot attributes
 include("../src/visual_attrs.jl")
 
-risk_abm_100_high = flood_ABM(;Elev = Elevation, levee = 1/100, breach = true)#, pop_growth = 0.01)
+risk_abm_100_high = flood_ABM(;Elev = Elevation, levee = 1/100, breach = true, N = 1200)#, pop_growth = 0.01)
 #low risk aversion
-risk_abm_100_low = flood_ABM(;Elev = Elevation, risk_averse = 0.7, levee = 1/100, breach = true)#, pop_growth = 0.01)
+risk_abm_100_low = flood_ABM(;Elev = Elevation, risk_averse = 0.7, levee = 1/100, breach = true, N = 1200)#, pop_growth = 0.01)
 
 #risk_exp_fig, ax, abmobs = abmexploration(risk_abm;
 #agent_step!, model_step!, params, plotkwargs..., adata, alabels = ["Action"], mdata, mlabels = ["Flood Depth"])
@@ -133,15 +133,15 @@ agent_plot = Plots.plot(adf.step, adf.count_action_fam, group = adf.risk_averse,
 
 Plots.plot!(adf_show.step, adf_show.count_action_fam, group = adf_show.risk_averse, label = ["high" "low"], 
 legendfontsize = 12, linecolor = [housecolor[6] housecolor[2]], lw = 3)
-Plots.ylims!(0,120)
+Plots.ylims!(0,300)
 Plots.ylabel!("Moving Agents", pointsize = 24)
 
 #plot agents in the floodplain
 fp_plot = Plots.plot(adf.step, adf.count_floodplain_fam, group = adf.risk_averse, label = false, linecolor = [housecolor[7] housecolor[3]], alpha = 0.35, lw = 1)
 Plots.plot!(adf_show.step, adf_show.count_floodplain_fam, group = adf_show.risk_averse, label = ["high" "low"], 
-legend = :topright, legendfontsize = 12, linecolor = [housecolor[6] housecolor[2]], lw = 3)
+legend = :bottomright, legendfontsize = 12, linecolor = [housecolor[6] housecolor[2]], lw = 3)
 Plots.ylabel!("Floodplain Pop.")
-Plots.ylims!(0,250)
+Plots.ylims!(0,500)
 Plots.xlabel!("Year", pointsize = 24)
 
 #plot flood depths

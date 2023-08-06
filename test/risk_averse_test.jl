@@ -137,7 +137,7 @@ agent_plot = Plots.plot(adf.step, adf.count_action_fam, group = adf.risk_averse,
 
 Plots.plot!(adf_show.step, adf_show.count_action_fam, group = adf_show.risk_averse, label = ["high" "low"], 
 legend = :topright, legendfontsize = 12, linecolor = [housecolor[6] housecolor[2]], lw = 3)
-#Plots.ylims!(0,300)
+Plots.ylims!(0,300)
 Plots.ylabel!("Moving Agents", pointsize = 24)
 
 #plot agents in the floodplain
@@ -145,7 +145,7 @@ fp_plot = Plots.plot(adf.step, adf.count_floodplain_fam, group = adf.risk_averse
 Plots.plot!(adf_show.step, adf_show.count_floodplain_fam, group = adf_show.risk_averse, label = ["high" "low"], 
 legend = :bottomright, legendfontsize = 12, linecolor = [housecolor[6] housecolor[2]], lw = 3)
 Plots.ylabel!("Floodplain Pop.")
-#Plots.ylims!(0,500)
+Plots.ylims!(0,500)
 Plots.xlabel!("Year", pointsize = 24)
 
 #plot flood depths

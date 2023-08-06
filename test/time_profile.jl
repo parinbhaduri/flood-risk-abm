@@ -8,7 +8,7 @@ tmr = TimerOutput()
 com_tmr = TimerOutput()
 
 #Benchmark step functions
-test_model = flood_ABM(;Elev = Elevation, levee = 1/100, breach = true)
+test_model = flood_ABM(;Elev = Elevation)#, levee = 1/100, breach = true)
 
 #Model
 function time_model_step!(model::ABM)
