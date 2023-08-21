@@ -78,7 +78,7 @@ function relocation!(model::ABM)
         pos_ids = ids_in_position(agent, model)
         curr_house = [model[id] for id in pos_ids if model[id] isa House][1]
         #Calculate agent utility at its current location
-        curr_utility = exp_utility(sort_house, model)
+        curr_utility = exp_utility(curr_house, model)
         #If agent's current utility is larger than max available, skip iteration
         curr_utility > house_df[1, :utility] && continue
         #move agent to better utility location
@@ -92,7 +92,7 @@ function relocation!(model::ABM)
     end
 end
 
-##Optimize relocation function 
+##Aliternate relocation function 
 function relocate!(model::ABM)
     "same as relocation above, but uses a dictionary to store house positions and utility values"
     #Filter Family agents by action = true
