@@ -66,33 +66,29 @@ function relocation!(model::ABM)
     sorted_agent = sort([a for a in allagents(model) if a isa Family && a.action == true], by = x -> x.income, rev = true)
     #Find available positions
     avail_house = [n for n in allagents(model) if n isa House && length(ids_in_position(n.pos, model)) < 2]
-    #Find max utility and associated position
-    #new_max = maximum(x -> x.Utility, avail_house)
-    #max_house = avail_house[findfirst(x -> x.Utility == new_max, avail_house)]
-    if length(avail_house) > 0
-
-        for i in sorted_agent
-            pos_ids = ids_in_position(i, model)
-            sort_house = [id for id in pos_ids if model[id] isa House][1]
-            #Calculate agent utility at its current location
-            agent_utility = exp_utility(model[sort_house], model)
-            #Calculate Utility across all avail_house
-            avail_utility = exp_utility.(avail_house, Ref(model)) #Ref sets model as a scalar for broadcasting
-            #Identify house w/ max utility in avail_house
-            new_max, new_pos = findmax(avail_utility)
-            
-            #If agent's current utility is larger than max available, skip iteration
-            agent_utility > new_max && continue
-            #Update agent utility
-            i.utility = new_max
-                    
-            #move agent to better utility location
-            move_agent!(i, avail_house[new_pos].pos, model)
-            #Remove max house from avail_house
-            deleteat!(avail_house, new_pos)
-            #Add agent's previous house to avail_house vector
-            push!(avail_house, model[sort_house])
+    #Store available positions and associated utility in array 
+    house_df = DataFrame(pos = [house.pos for house in avail_house], utility = [exp_utility(house, model) for house in avail_house])
+    sort!(house_df, :utility, rev = true)
+    
+    for agent in sorted_agent
+        #Ensure there are available houses
+        if length(house_df[:,1]) == 0
+            break
         end
+        pos_ids = ids_in_position(agent, model)
+        curr_house = [model[id] for id in pos_ids if model[id] isa House][1]
+        #Calculate agent utility at its current location
+        curr_utility = exp_utility(sort_house, model)
+        #If agent's current utility is larger than max available, skip iteration
+        curr_utility > house_df[1, :utility] && continue
+        #move agent to better utility location
+        move_agent!(agent, house_df[1, :pos], model)
+        #Update agent utility
+        agent.utility = house_df[1, :utility]
+        #Remove moved into house from house_df
+        popfirst!(house_df)
+        #Add agent's previous house to house_df
+        insert!(house_df, searchsortedfirst(house_df[!, :utility], curr_utility, rev = true), (curr_house.pos, curr_utility))
     end
 end
 

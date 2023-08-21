@@ -136,7 +136,7 @@ function combine_step!(model::ABM)
     for id in Agents.schedule(model)
         agent_step!(model[id], model)
     end
-    relocate!(model)
+    relocation!(model)
     #increase pop every 5 years
     if model.pop_growth > 0
         model.tick % 5 == 0 && pop_change!(model)
