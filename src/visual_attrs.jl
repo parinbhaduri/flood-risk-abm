@@ -6,9 +6,9 @@ const housecolor = cgrad(:dense, 11, categorical = true)
 Floodcolor(agent::House) = housecolor[Int64(agent.flood_mem+1)]
 
 Floodshape(agent::Family) = '⌂'
-Floodsize(agent::Family) = 60
+Floodsize(agent::Family) = 30
 Floodshape(agent::House) = '■'
-Floodsize(agent::House) = 80,80
+Floodsize(agent::House) = 40,40
 
 plotsched = Schedulers.ByType(true, true, Union{House,Family})
 
@@ -32,6 +32,8 @@ scatterkwargs = (strokewidth = 1.0,)
 action(agent) = agent.action == true
 #filter out houses
 fam(agent) = agent isa Family
+#filter out family
+house(agent) = agent isa House
 #count Families in floodplain
 f_depth = GEV_return(1/100)
 floodplain(agent) = agent.pos in Tuple.(findall(<(f_depth), Elevation))
@@ -65,6 +67,10 @@ end
 function model_seed(model::ABM)
     return model.rng.seed[1] % Int
 end
+
+#Count available houses in grid
+#vacant(model::ABM) = length([n for n in allagents(model) if length(ids_in_position(n.pos, model)) < 2 && n isa House])
+
 ## Save agent & model data to collect
 adata = [(action, count, fam), (floodplain, count, fam)]
 mdata = [floodepth]
