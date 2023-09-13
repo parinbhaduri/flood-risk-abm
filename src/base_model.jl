@@ -15,13 +15,18 @@ include("agent_types.jl")
 include("agent_step.jl")
 
 #Create struct to hold model properties
-mutable struct Properties{Elev<:Matrix{Float64}, levee<:Float64, breach<:Bool, flood_depth<:Vector{Float64}, risk_averse<:Float64, mem<:Int, pop_growth<:Float64, tick<:Int}
+mutable struct Properties{Elev<:Matrix{Float64}, levee<:Float64, breach<:Bool, b_n<:Float64, flood_depth<:Vector{Float64}, risk_averse<:Float64, mem<:Int, fe<:Float64, 
+    prob_move<:Float64, pop_growth<:Float64, tick<:Int}
+
     Elevation::Elev
     levee::levee
-    breach::breach 
+    breach::breach
+    breach_null::b_n 
     Flood_depth::flood_depth
     risk_averse::risk_averse
-    memory::mem 
+    memory::mem
+    fixed_effect::fe
+    base_move::prob_move 
     pop_growth::pop_growth
     tick::tick
 end
@@ -30,9 +35,12 @@ end
 function flood_ABM(;Elev = Elevation, risk_averse = 0.3, levee = 0.0,  #risk_averse: Decimal between 0 and 1
     #flood_depth = copy(flood_record),
     breach = false, #Determine if Levee breaching is included in model
+    b_n = 0.45,
     N = 1200, #Number of family agents to create 
     pop_growth = 0.0, #Population growth at each timestep. Recorded as decimal bw 0 and 1
     mem = 10, #Flood memory (must be integer)
+    fe = 0.03,
+    prob_move = 0.025, 
     seed = 1897,
 )
     griddims = size(Elev)  #Dim of grid
@@ -45,7 +53,7 @@ function flood_ABM(;Elev = Elevation, risk_averse = 0.3, levee = 0.0,  #risk_ave
     
     #properties = Dict(:Elevation => Elev, :levee => levee, :breach => breach, :Flood_depth => flood_depth, :risk_averse => risk_averse,
     # :memory => 10, :pop_growth => pop_growth, :tick => 0)
-    parameters = Properties(Elev, levee, breach, flood_depth, risk_averse, mem, pop_growth, 0)
+    parameters = Properties(Elev, levee, breach, b_n, flood_depth, risk_averse, mem, fe, prob_move, pop_growth, 0)
     
 
     model = ABM(

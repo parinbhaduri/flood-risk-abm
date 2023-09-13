@@ -47,7 +47,7 @@ function flood_GEV!(model::ABM)
         flood_levee = model.Flood_depth[year] - levee_height
         if model.breach == true
             #calculate breach probability
-            prob_fail = levee_breach(model.Flood_depth[year])
+            prob_fail = levee_breach(model.Flood_depth[year]; n_null = model.breach_null)
             #Determine if Levee Breaches
             breach_outcome = rand(model.rng, Binomial(1,prob_fail))
             flood_levee = breach_outcome == 1 ? model.Flood_depth[year] : flood_levee
