@@ -1,7 +1,13 @@
-#initialize model
 include("../src/base_model.jl")
-#Define plot attributes
 include("../src/visual_attrs.jl")
+#For Parallelization
+using Distributed
+addprocs(4, exeflags="--project=$(Base.active_project())")
+
+#initialize model
+@everywhere include("../src/base_model.jl")
+#Define plot attributes
+@everywhere include("../src/visual_attrs.jl")
 
 #Create models for comparison
 risk_abm_high = flood_ABM(; N = 1200)#, pop_growth = 0.01)
@@ -37,7 +43,7 @@ Plots.ylabel!("Flood Depth", pointsize = 24)
 
 #create subplot
 averse_results = Plots.plot(model_plot, agent_plot, fp_plot, layout = (3,1), dpi = 300, size = (500,600))
-Plots.title!("Base Move Probability: 2.5%; N = 1200 w/ 1% growth")
+#Plots.title!("Base Move Probability: 2.5%; N = 1200 w/ 1% growth")
 
 
 savefig(averse_results, "test/Test_visuals/averse_results.png")
@@ -47,7 +53,7 @@ damage_results = Plots.plot(model_plot, damage_plot, layout = (2,1), dpi = 300, 
 
 
 ##Spatial Plots
-risk_abm_high = flood_ABM(Elevation)
+risk_abm_high = flood_ABM(;Elev = Elevation)
 step!(risk_abm_high, agent_step!, model_step!,12, false)
 #Create Plot
 risk_fig, ax, abmobs = abmplot(risk_abm_high; plotkwargs...)
@@ -63,11 +69,11 @@ Makie.save("test/Test_visuals/risk_fig.png", risk_fig)
 ### Repeat Above with ensemble runs to create credible intervals
 
 #Create model ensemble with different seeds 
-models_high = [flood_ABM(Elevation; seed = i) for i in 1000:2000]
-models_low = [flood_ABM(Elevation; risk_averse = 0.7, seed = i) for i in 1000:2000]
+models_high = [flood_ABM(;Elev = Elevation, seed = i) for i in 1000:2000]
+models_low = [flood_ABM(;Elev = Elevation, risk_averse = 0.7, seed = i) for i in 1000:2000]
 ##Try ensemble run
-adf_high, _ = ensemblerun!(models_high, dummystep, combine_step!, 50, agents_first = false; adata)
-adf_low, _ = ensemblerun!(models_low, dummystep, combine_step!, 50, agents_first = false; adata)
+adf_high, _ = ensemblerun!(models_high, dummystep, combine_step!, 50, agents_first = false, parallel = true, showprogress = true; adata)
+adf_low, _ = ensemblerun!(models_low, dummystep, combine_step!, 50, agents_first = false, showprogress = true; adata)
 
 gdf_high = groupby(adf_high, :step)
 gdf_high_med = combine(gdf_high, [:count_action_fam :count_floodplain_fam] .=> median; renamecols=false)
@@ -114,51 +120,3 @@ savefig(averse_ensemble_results, "test/Test_visuals/averse_ensemble.png")
 
 
 
-### Create plot showing all flood records and all model revolutions
-params = Dict(
-    :Elev => Elevation,
-    :risk_averse => [0.3, 0.7],
-    :levee => nothing,
-    :breach => false,
-    :N => 1200, 
-    :pop_growth => 0,
-    :seed => collect(range(1000,2000)), 
-)
-##create models
-adf, mdf = paramscan(params, flood_ABM; showprogress = true, adata, mdata, agent_step! = dummystep, model_step! = combine_step!, n = 50)
-adf_show = filter(:seed => isequal(1897), adf)
-mdf_show = filter(:seed => isequal(1897), mdf)
-##evolve models
-
-##Plot
-
-#plot agents deciding to move
-agent_plot = Plots.plot(adf.step, adf.count_action_fam, group = adf.risk_averse, label = false, linecolor = [housecolor[7] housecolor[3]], alpha = 0.35, lw = 1)
-
-Plots.plot!(adf_show.step, adf_show.count_action_fam, group = adf_show.risk_averse, label = ["high" "low"], 
-legend = :topright, legendfontsize = 12, linecolor = [housecolor[6] housecolor[2]], lw = 3)
-Plots.ylims!(0,300)
-Plots.ylabel!("Moving Agents", pointsize = 24)
-
-#plot agents in the floodplain
-fp_plot = Plots.plot(adf.step, adf.count_floodplain_fam, group = adf.risk_averse, label = false, linecolor = [housecolor[7] housecolor[3]], alpha = 0.35, lw = 1)
-Plots.plot!(adf_show.step, adf_show.count_floodplain_fam, group = adf_show.risk_averse, label = ["high" "low"], 
-legend = :bottomright, legendfontsize = 12, linecolor = [housecolor[6] housecolor[2]], lw = 3)
-Plots.ylabel!("Floodplain Pop.")
-Plots.ylims!(0,500)
-Plots.xlabel!("Year", pointsize = 24)
-
-#plot flood depths
-model_plot = Plots.plot(mdf.step[1:51051], mdf.floodepth[1:51051], legend = false, linecolor = :gray, alpha = 0.5, lw = 1)
-Plots.plot!(mdf_show.step[1:51], mdf_show.floodepth[1:51], legend = false, linecolor = housecolor[10], lw = 3)
-#Add line showing 100- yr level 
-flood_100 = [GEV_return(1/100) for _ in 1:51]
-Plots.plot!(mdf_show.step[1:51],flood_100, line = :dash, linecolor = RGB(213/255,111/255,62/255), lw = 3)
-annotate!(32,14,Plots.text("100-year level", family="serif", pointsize = 18, color = RGB(213/255,111/255,62/255)))
-Plots.ylims!(0,40)
-Plots.ylabel!("Flood Depth", pointsize = 24)
-
-#create subplot
-averse_real = Plots.plot(model_plot, agent_plot, fp_plot, layout = (3,1), dpi = 300, size = (500,600))
-
-savefig(averse_real, "test/Test_visuals/averse_realizations.png")

@@ -15,9 +15,9 @@ function agent_prob!(agent::Family, model::ABM)
     pos_ids = ids_in_position(agent, model) #First id is Family, second is House
     calc_house = [id for id in pos_ids if model[id] isa House][1]
     #Define baseline probability of movement
-    base_prob = 0.025
+    base_prob = model.base_move
     ##Fixed effect: define scaling factor depending on levee presence
-    scale_factor = model.levee == 0.0 ? 0.1 : 0.1 - 0.03
+    scale_factor = model.levee == 0.0 ? 0.1 : 0.1 - model.fixed_effect
     #Calculate flood probability based on risk averse value
     if model[calc_house].flood_mem == 0
         flood_prob = base_prob
@@ -79,7 +79,7 @@ function pop_change!(model::ABM)
     avail_house = [n for n in allagents(model) if n isa House && length(ids_in_position(n.pos, model)) < 2]
     
     #Calculate number of additional agents 
-    new_pop = length([n for n in allagents(model) if n isa Family]) * model.pop_growth
+    new_pop = (nagents(model) - spacesize(model)[1]^2) * model.pop_growth
     #Match new agents with empty houses
     for n in 1:new_pop
         #Ensure there are available houses

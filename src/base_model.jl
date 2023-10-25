@@ -39,7 +39,7 @@ function flood_ABM(;Elev = Elevation, risk_averse = 0.3, levee = 0.0,  #risk_ave
     N = 1200, #Number of family agents to create 
     pop_growth = 0.0, #Population growth at each timestep. Recorded as decimal bw 0 and 1
     mem = 10, #Flood memory (must be integer)
-    fe = 0.03,
+    fe = 0.0,
     prob_move = 0.025, 
     seed = 1897,
 )

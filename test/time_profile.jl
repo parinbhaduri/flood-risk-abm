@@ -8,7 +8,7 @@ tmr = TimerOutput()
 com_tmr = TimerOutput()
 
 #Benchmark step functions
-test_model = flood_ABM(;Elev = Elevation)#, levee = 1/100, breach = true)
+test_model = flood_ABM(;Elev = Elevation, pop_growth = 0.02)#, levee = 1/100, breach = true)
 
 
 
@@ -24,7 +24,7 @@ function time_combine_step_new!(model::ABM)
     end
     
     @timeit tmr "relocation" relocation!(model)
-    model.pop_growth > 0 && pop_change!(model)
+    @timeit tmr "pop growth" model.pop_growth > 0 && pop_change!(model)
 end
 
 
@@ -38,8 +38,8 @@ function time_combine_step!(model::ABM)
         end
     end
     
-    @timeit com_tmr "relocate" relocate!(model)
-    model.pop_growth > 0 && pop_change!(model)
+    @timeit com_tmr "relocate" relocation!(model)
+    @timeit com_tmr "pop growth" model.pop_growth > 0 && pop_change!(model)
 end
 
 #test new combine step
@@ -53,4 +53,13 @@ show(com_tmr)
 reset_timer!(com_tmr)
 
 #Becnhmark entire step function
-@benchmark step!(test_model, $dummystep, $time_combine_step_new!, 50) setup=(test_model = flood_ABM(;Elev = Elevation, levee = 1/100, breach = true)) evals=1
+@benchmark step!(test_model, $dummystep, $time_combine_step_new!, 50) setup=(test_model = flood_ABM(;Elev = Elevation, levee = 1/100, breach = true, pop_growth = 0.02)) evals=1
+
+
+
+map(collect(Agents.schedule(test_model))) do id
+    agent_step!(test_model[id], test_model)
+end
+
+#test_model.tick += 1
+#map(a -> agent_step!(test_model[a], test_model), collect(Agents.schedule(test_model)))

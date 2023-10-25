@@ -7,7 +7,7 @@ Floodcolor(agent::House) = housecolor[Int64(agent.flood_mem+1)]
 
 Floodshape(agent::Family) = '⌂'
 Floodsize(agent::Family) = 30
-Floodshape(agent::House) = '■'
+Floodshape(agent::House) = '□'
 Floodsize(agent::House) = 40,40
 
 plotsched = Schedulers.ByType(true, true, Union{House,Family})

@@ -4,6 +4,10 @@ grid_length = 44
 basin = range(0, 30, length = Int64(grid_length/2))
 Elevation = zeros(grid_length, grid_length).+ [reverse(basin); basin]
 
+#Create Elevation Matrix for visualizations:
+grid_length = 30
+basin = range(0, 30, length = Int64(grid_length/2))
+Elev_60 = zeros(grid_length, grid_length).+ [reverse(basin); basin]
 """
 #Create Elevation Matrix for 100 yr event levee
 include("GEV.jl")
