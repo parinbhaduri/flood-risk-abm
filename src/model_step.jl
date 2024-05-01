@@ -92,7 +92,7 @@ function relocation!(model::ABM)
     end
 end
 
-##Aliternate relocation function 
+##Alternate relocation function [DEPRECATED]
 function relocate!(model::ABM)
     "same as relocation above, but uses a dictionary to store house positions and utility values"
     #Filter Family agents by action = true
