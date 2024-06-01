@@ -3,7 +3,7 @@ to move based on flooding, nor do they factor in flood loss when deciding where 
 
 #Gather model functions
 include("../src/base_model.jl")
-include("../src/visual_attrs.jl")
+include("../src/data_collect.jl")
 #Create alternative agent step function
 ## Calculate Agent Probability to act
 function agent_prob_unit!(agent::Family, model::ABM)
@@ -13,30 +13,35 @@ function agent_prob_unit!(agent::Family, model::ABM)
     #Calculate logistic Probability
     year = model.tick
     mem = model.memory
-    #flood_prob = 0.01
-    #"""
+    
+    pos_ids = ids_in_position(agent, model) #First id is Family, second is House
+    calc_house = [id for id in pos_ids if model[id] isa House][1]
+    #Define baseline probability of movement
+    base_prob = model.base_move
+    
     #Calculate flood probability based on risk averse value
-    #No of Flood events not included here 
-    if model.risk_averse == 0
-        flood_prob = 1/(1+ exp(-20((0/mem) - 0.1)))
+    if model[calc_house].flood_mem == 0
+        flood_prob = base_prob
+    elseif model.risk_averse == 0
+        #flood_prob = 1/(1+ exp(-20((sum(model[calc_house].flood[time_back])/mem) - 0.1)))
+        flood_prob = 1/(1+ exp(-20((0) - 0.1)))  + base_prob
     elseif model.risk_averse == 1
         flood_prob = 0
     else
-        flood_prob = 1/(1+ exp(-10((0/mem) - model.risk_averse)))
+        #flood_prob = 1/(1+ exp(-10((sum(model[calc_house].flood[time_back])/mem) - model.risk_averse)))
+        flood_prob = 1/(1+ exp(-10((0) - model.risk_averse))) + base_prob
     end
-    #"""
     #Input probability into Binomial Distribution 
-    if flood_prob <= 1
+    move_prob = flood_prob <= 1.0 ? flood_prob : 1
     #outcome = rand(model.rng, 1)
-        outcome = rand(model.rng, Binomial(1,flood_prob))
+    outcome = rand(model.rng, Binomial(1,move_prob))
     #Save Binomial result as Agent property
-        action = outcome == 1 ? true : false
-        agent.action = action
-    end
+    action = outcome == 1 ? true : false
+    agent.action = action
 end
 
 ## Create Function for Family agent to calculate utility
-function exp_utility_unit(house::House)
+function exp_utility_unit(house::House, model::ABM)
     c1 = 294707 #SqFeet coef
     c2 = 130553 #Age coef
     c3 = 128990 #Stories coef
@@ -59,7 +64,8 @@ end
 
 #For House
 function agent_step_unit!(agent::House, model::ABM)
-    flooded!(agent, model)
+    #flood_GEV!(agent, model)
+    nothing
 
     
 end
@@ -70,77 +76,32 @@ function relocation_noflood!(model::ABM)
     sorted_agent = sort([a for a in allagents(model) if a isa Family && a.action == true], by = x -> x.income, rev = true)
     #Find available positions
     avail_house = [n for n in allagents(model) if n isa House && length(ids_in_position(n.pos, model)) < 2]
-    for i in sorted_agent
-        pos_ids = ids_in_position(i, model)
-        sort_house = [id for id in pos_ids if model[id] isa House][1]
-        #Calculate agent utility at its current location
-        agent_utility = exp_utility_unit(model[sort_house])
-        #Calculate Utility across all avail_house
-        avail_utility = exp_utility_unit.(avail_house)
-        #Identify house w/ max utility in avail_house
-        new_max, new_pos = findmax(avail_utility)
-        
-        #If agent's current utility is larger than max available, skip iteration
-        agent_utility > new_max && continue
-        #Update agent utility
-        i.utility = new_max
-                
-        #move agent to better utility location
-        move_agent!(i, avail_house[new_pos].pos, model)
-        #Remove max house from avail_house
-        deleteat!(avail_house, new_pos)
-        #Add agent's previous house to avail_house vector
-        push!(avail_house, model[sort_house])
-    end
-end
-
-function relocate_noflood!(model::ABM)
-    "uses a dictionary to store house positions and utility values"
-    #Filter Family agents by action = true
-    sorted_agent = sort([a for a in allagents(model) if a isa Family && a.action == true], by = x -> x.income, rev = true)
-    #Find available positions
-    avail_house = [n for n in allagents(model) if n isa House && length(ids_in_position(n.pos, model)) < 2]
-    #Calculate Utility across all avail_house
-    util_dict = Dict(house.pos => exp_utility_unit(house) for house in avail_house)
-    #Create dictionary to link house with utilities
-    #Find max utility and associated position
-    for i in sorted_agent
+    #Store available positions and associated utility in array 
+    house_df = DataFrame(pos = [house.pos for house in avail_house], utility = [exp_utility_unit(house, model) for house in avail_house])
+    sort!(house_df, :utility, rev = true)
+    
+    for agent in sorted_agent
         #Ensure there are available houses
-        if length(avail_house) == 0
+        if length(house_df[:,1]) == 0
             break
         end
-        
-        pos_ids = ids_in_position(i, model)
-        sort_house = [id for id in pos_ids if model[id] isa House][1]
+        pos_ids = ids_in_position(agent, model)
+        curr_house = [model[id] for id in pos_ids if model[id] isa House][1]
         #Calculate agent utility at its current location
-        agent_utility = exp_utility_unit(model[sort_house])
-        
-        #Identify house w/ max utility in avail_house
-        new_max = maximum(values(util_dict))
-     
+        curr_utility = exp_utility_unit(curr_house, model)
         #If agent's current utility is larger than max available, skip iteration
-        agent_utility > new_max && continue
-        #Update agent utility
-        i.utility = new_max
-                    
+        curr_utility > house_df[1, :utility] && continue
         #move agent to better utility location
-        new_pos = [k for (k,v) in util_dict if v == new_max][1]
-        move_agent!(i, new_pos, model)
-
-        #Remove max house from avail_house
-        delete!(util_dict, new_pos)
-        #Add agent's previous house to avail_house vector
-        util_dict[model[sort_house].pos] = agent_utility
+        move_agent!(agent, house_df[1, :pos], model)
+        #Update agent utility
+        agent.utility = house_df[1, :utility]
+        #Remove moved into house from house_df
+        popfirst!(house_df)
+        #Add agent's previous house to house_df
+        insert!(house_df, searchsortedfirst(house_df[!, :utility], curr_utility, rev = true), (curr_house.pos, curr_utility))
     end
 end
 
-##Update model step
-function model_step_noflood!(model::ABM)
-    model.tick += 1
-    flood_GEV!(model)
-    relocation_noflood!(model)
-    model.pop_growth > 0 && pop_change!(model)
-end
 
 function combine_step_noflood!(model::ABM)
     model.tick += 1
@@ -148,7 +109,7 @@ function combine_step_noflood!(model::ABM)
     for id in Agents.schedule(model)
         agent_step_unit!(model[id], model)
     end
-    relocate_noflood!(model)
+    relocation_noflood!(model)
     model.pop_growth > 0 && pop_change!(model)
 end
 
@@ -157,22 +118,22 @@ end
 ###run model to gather data (ra = 0.3; ra = 0.7)
 
 ##Create models
-unit_model_high = flood_ABM(Elevation; risk_averse =  0.5)#; pop_growth = 0.005)
-unit_model_low = flood_ABM(Elevation; risk_averse =  0.7)#, pop_growth = 0.005)
+unit_model_high = flood_ABM(;Elev = Elevation, levee = 1/100, breach = true, N = 1200)#; pop_growth = 0.005)
+unit_model_low = flood_ABM(;Elev = Elevation, levee = 1/100, breach = true, risk_averse = 0.7, N = 1200)#, pop_growth = 0.005)
 ##Try ensemble run
 adf, _ = ensemblerun!([unit_model_high unit_model_low], dummystep, combine_step_noflood!, 50; adata)
 
 #plot agents deciding to move
 agent_plot = Plots.plot(adf.step, adf.count_action_fam, group = adf.ensemble, label = ["high" "low"], 
 legendfontsize = 12, linecolor = [housecolor[6] housecolor[2]], lw = 5)
-Plots.ylims!(0,50)
+#Plots.ylims!(0,50)
 Plots.ylabel!("Moving Agents", pointsize = 24)
 
 #plot agents in the floodplain
 fp_plot = Plots.plot(adf.step, adf.count_floodplain_fam, group = adf.ensemble, label = ["high" "low"], 
 legend = :bottomright,legendfontsize = 12, linecolor = [housecolor[7] housecolor[3]], lw = 5)
 Plots.ylabel!("Floodplain Pop.")
-Plots.ylims!(80,400)
+#Plots.ylims!(80,400)
 Plots.xlabel!("Year", pointsize = 24)
 #plot flood depths
 model_plot = Plots.plot(adf.step[1:51], unit_model_high.Flood_depth[1:51], legend = false,

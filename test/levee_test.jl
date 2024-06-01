@@ -18,14 +18,14 @@ adf_100, _ = ensemblerun!([risk_abm_100_high risk_abm_100_low], dummystep, combi
 #plot agents deciding to move
 agent_plot_100 = Plots.plot(adf_100.step, adf_100.count_action_fam, group = adf_100.ensemble, label = ["high" "low"], 
 legendfontsize = 12, linecolor = [housecolor[6] housecolor[2]], lw = 5)
-Plots.ylims!(0,80)
+#Plots.ylims!(0,80)
 Plots.ylabel!("Moving Agents", pointsize = 24)
 
 #plot agents in the floodplain
 fp_plot_100 = Plots.plot(adf_100.step, adf_100.count_floodplain_fam, group = adf_100.ensemble, label = ["high" "low"], 
 legend = :bottomright, legendfontsize = 12, linecolor = [housecolor[7] housecolor[3]], lw = 5)
 Plots.ylabel!("Floodplain Pop.")
-Plots.ylims!(0,240)
+#Plots.ylims!(0,240)
 Plots.xlabel!("Year", pointsize = 24)
 
 #plot flood depths
@@ -34,9 +34,9 @@ Plots.xlabel!("Year", pointsize = 24)
 model_plot_100 = Plots.plot(adf_100.step[1:51], risk_abm_100_high.Flood_depth[1:51], legend = false,
  linecolor = [housecolor[10] housecolor[5]], lw = 5)
  #Add line showing 100- yr level 
-flood_100 = [GEV_return(1/100) for _ in 1:51]
+flood_100 = [GEV_return(risk_abm_100_high.levee) for _ in 1:51]
 Plots.plot!(adf_100.step[1:51],flood_100, line = :dash, lw = 3)
-annotate!(32,14,Plots.text("100-year level", family="serif", pointsize = 18, color = RGB(213/255,111/255,62/255)))
+#annotate!(32,14,Plots.text("100-year level", family="serif", pointsize = 18, color = RGB(213/255,111/255,62/255)))
 Plots.ylims!(0,30)
 Plots.ylabel!("Flood Depth", pointsize = 24)
 
@@ -59,7 +59,7 @@ Makie.save("test/Test_visuals/risk_fig_100.png", risk_fig_100)
 
 ###Repeat with ensemble runs
 #Create model ensemble with different seeds 
-models_high_100 = [flood_ABM(Elevation; levee = 1/100, breach = true, seed = i) for i in 1000:2000]
+models_high_100 = [flood_ABM(Elevation; levee = 1/100, breach = true, seed = i) for i in 1000:2000] #Needs updating: Has to have a single flood record with a different seed for model evolution
 models_low_100 = [flood_ABM(Elevation; risk_averse = 0.7, levee = 1/100, breach = true, seed = i) for i in 1000:2000]
 ##Try ensemble run
 adf_high_100, _ = ensemblerun!(models_high_100, dummystep, combine_step!, 50; adata)
