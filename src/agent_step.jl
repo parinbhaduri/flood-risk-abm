@@ -17,7 +17,7 @@ function agent_prob!(agent::Family, model::ABM)
     #Define baseline probability of movement
     base_prob = model.base_move
     ##Fixed effect: define scaling factor depending on levee presence
-    scale_factor = model.levee == 0.0 ? 1.0 : model.fixed_effect
+    scale_factor = model.levee == 0.0 ? 0.1 : 0.1 - model.fixed_effect
     #Calculate flood probability based on risk averse value
     if model[calc_house].flood_mem == 0
         flood_prob = base_prob
@@ -28,7 +28,7 @@ function agent_prob!(agent::Family, model::ABM)
         flood_prob = 0
     else
         #flood_prob = 1/(1+ exp(-10((sum(model[calc_house].flood[time_back])/mem) - model.risk_averse)))
-        flood_prob = 1/(1+ exp(-10(scale_factor*(model[calc_house].flood_mem/mem) - model.risk_averse))) + base_prob
+        flood_prob = 1/(1+ exp(-((model[calc_house].flood_mem/mem) - model.risk_averse)/scale_factor)) + base_prob
     end
     #Input probability into Binomial Distribution 
     move_prob = flood_prob <= 1.0 ? flood_prob : 1

@@ -4,6 +4,7 @@ to move based on flooding, nor do they factor in flood loss when deciding where 
 #Gather model functions
 include("../src/base_model.jl")
 include("../src/data_collect.jl")
+include("../src/visual_attrs.jl")
 #Create alternative agent step function
 ## Calculate Agent Probability to act
 function agent_prob_unit!(agent::Family, model::ABM)
